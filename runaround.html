@@ -43,6 +43,15 @@
             cursor: pointer;
             font-family: 'Courier New', monospace;
         }
+        #saveButton {
+            align-self: center;
+            background-color: #444;
+            border: none;
+            color: #fff;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+        }
         #crystalCount {
             margin-top: 10px;
         }
@@ -50,6 +59,7 @@
 </head>
 <body>
     <canvas id="gameCanvas" width="640" height="480"></canvas>
+    <button id="saveButton">Save Level to File</button>
     <div id="messagePanel">
         <div id="messageText"></div>
         <button id="dismissButton">OK</button>
@@ -105,6 +115,25 @@
             updateCrystalCount();
         }
 
+        function saveBoardToFile() {
+            const boardData = {
+                tiles: board.tiles,
+                required_crystals: board.requiredCrystals
+            };
+
+            const jsonString = JSON.stringify(boardData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'board.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
         // Sample level data
         const sampleLevel = {
             tiles: [
@@ -132,6 +161,8 @@
             messagePanel.style.display = 'none';
         });
     
+        document.getElementById('saveButton').addEventListener('click', saveBoardToFile);
+
         function loadLevel(levelData) {
             board.tiles = levelData.tiles;
             board.requiredCrystals = levelData.required_crystals;
