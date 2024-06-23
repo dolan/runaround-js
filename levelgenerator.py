@@ -1,5 +1,6 @@
 import random
 import json
+from collections import deque
 
 class LevelGenerator:
     def __init__(self, width, height):
@@ -8,12 +9,18 @@ class LevelGenerator:
         self.board = []
         self.crystals = 0
         self.movable_blocks = 0
+        self.player_pos = None
+        self.exit_pos = None
 
     def generate_level(self):
-        self.create_initial_layout()
-        self.add_features(5)  # Make up to 5 passes adding features
-        self.add_player_and_exit()
-        return self.board, self.crystals
+        while True:
+            self.create_initial_layout()
+            self.add_features(5)  # Make up to 5 passes adding features
+            self.add_player_and_exit()
+            if self.is_level_solvable():
+                return self.board, self.crystals
+            # If not solvable, reset and try again
+            self.reset()
 
     def create_initial_layout(self):
         self.board = [["w" for _ in range(self.width)] for _ in range(self.height)]
@@ -27,12 +34,10 @@ class LevelGenerator:
             feature()
 
     def add_protected_crystal(self):
-        # Find a sufficiently large empty area
         x, y = self.find_empty_area(5, 5)
         if x is None or y is None:
             return
 
-        # Create a boxed-in area
         for dy in range(5):
             for dx in range(5):
                 if dx == 0 or dx == 4 or dy == 0 or dy == 4:
@@ -40,12 +45,10 @@ class LevelGenerator:
                 else:
                     self.board[y + dy][x + dx] = "."
 
-        # Place the crystal
         crystal_x, crystal_y = x + 2, y + 2
         self.board[crystal_y][crystal_x] = "c"
         self.crystals += 1
 
-        # Add holes and corresponding movable blocks
         directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]
         random.shuffle(directions)
         holes_count = random.randint(1, 3)
@@ -78,9 +81,11 @@ class LevelGenerator:
     def add_player_and_exit(self):
         player_x, player_y = self.find_empty_space()
         self.board[player_y][player_x] = "p"
+        self.player_pos = (player_x, player_y)
 
         exit_x, exit_y = self.find_empty_space()
         self.board[exit_y][exit_x] = "x"
+        self.exit_pos = (exit_x, exit_y)
 
     def find_empty_space(self):
         attempts = 100
@@ -110,7 +115,53 @@ class LevelGenerator:
         return True
 
     def is_valid_position(self, x, y):
-        return 0 < x < self.width - 1 and 0 < y < self.height - 1
+        return 0 <= x < self.width and 0 <= y < self.height
+
+    def is_level_solvable(self):
+        # Check if all crystals are reachable
+        reachable_crystals = self.count_reachable_tiles('c')
+        if reachable_crystals < self.crystals:
+            return False
+
+        # Check if exit is reachable
+        if not self.is_tile_reachable(self.exit_pos[0], self.exit_pos[1]):
+            return False
+
+        return True
+
+    def count_reachable_tiles(self, tile_type):
+        count = 0
+        for y in range(self.height):
+            for x in range(self.width):
+                if self.board[y][x] == tile_type and self.is_tile_reachable(x, y):
+                    count += 1
+        return count
+
+    def is_tile_reachable(self, target_x, target_y):
+        visited = set()
+        queue = deque([(self.player_pos[0], self.player_pos[1])])
+
+        while queue:
+            x, y = queue.popleft()
+            if (x, y) == (target_x, target_y):
+                return True
+
+            for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+                nx, ny = x + dx, y + dy
+                if self.is_valid_position(nx, ny) and (nx, ny) not in visited:
+                    tile = self.board[ny][nx]
+                    if tile in [".", "c", "m", "x"] or (tile == "h" and self.movable_blocks > 0):
+                        visited.add((nx, ny))
+                        queue.append((nx, ny))
+
+        return False
+
+    def reset(self):
+        self.board = []
+        self.crystals = 0
+        self.movable_blocks = 0
+        self.player_pos = None
+        self.exit_pos = None
 
 def generate_level_json(width, height):
     generator = LevelGenerator(width, height)
