@@ -26,4 +26,6 @@ The timeline of Runaround
                game in one shot. I asked it to render the tiles using
                glyphs on raw background (one extra 1-line prompt in addition to
                spec file included in this repo)
- 
+     - June 25 - Claude 3.5 Sonnet and I have cycled through about 10 more times
+               - added the arbitrary board size / scalable viewport
+
