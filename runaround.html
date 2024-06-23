@@ -66,6 +66,17 @@
     </div>
     <div>Crystals: <span id="crystalCount">0</span></div>
     <script>
+        const gameColors = {
+            background: '#f0f0f0',
+            text: '#333333',
+            gridBorder: '#666666',
+            wall: '#1a4ba0',
+            player: '#e63946',
+            crystal: '#06d6a0',
+            obstacle: '#ffd166',
+            exit: '#118ab2'
+        };
+
         const tileSize = 32;
         const viewportSize = 20;
 
@@ -195,16 +206,16 @@
 
         function getTileColor(tile) {
             const colorMap = {
-                'w': 'brown',
-                '.': 'lightgray',
-                'c': 'lightgray',
-                'x': board.crystals >= board.requiredCrystals ? 'green' : 'red',
-                'm': 'lightgray',
-                'h': 'lightgray',
-                'ol': 'gray',
-                'or': 'gray',
-                'ou': 'gray',
-                'od': 'gray'
+                'w': gameColors.wall,
+                '.': gameColors.background,
+                'c': gameColors.background,
+                'x': gameColors.exit,
+                'm': gameColors.background,
+                'h': gameColors.background,
+                'ol': gameColors.obstacle,
+                'or': gameColors.obstacle,
+                'ou': gameColors.obstacle,
+                'od': gameColors.obstacle
             };
             return colorMap[tile] || 'white';
         }
