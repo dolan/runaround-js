@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sokoban-like Game</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="320" height="320"></canvas>
+    <div>Crystals: <span id="crystalCount">0</span></div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const tileSize = 32;
+        
+        let board = {
+            tiles: [],
+            player: { x: 0, y: 0 },
+            crystals: 0,
+            requiredCrystals: 3
+        };
+
+        function loadLevel(levelData) {
+            board.tiles = levelData.tiles;
+            board.requiredCrystals = levelData.required_crystals;
+            
+            // Find player starting position
+            for (let y = 0; y < board.tiles.length; y++) {
+                for (let x = 0; x < board.tiles[y].length; x++) {
+                    if (board.tiles[y][x] === 'p') {
+                        board.player.x = x;
+                        board.player.y = y;
+                        board.tiles[y][x] = '.'; // Replace player tile with empty tile
+                        break;
+                    }
+                }
+            }
+        }
+
+        function drawTile(x, y, tile) {
+            const centerX = x * tileSize + tileSize / 2;
+            const centerY = y * tileSize + tileSize / 2;
+
+            // Draw background
+            switch (tile) {
+                case 'w':
+                    ctx.fillStyle = 'brown';
+                    break;
+                case '.':
+                    ctx.fillStyle = 'lightgray';
+                    break;
+                case 'c':
+                    ctx.fillStyle = 'yellow';
+                    break;
+                case 'x':
+                    ctx.fillStyle = board.crystals >= board.requiredCrystals ? 'green' : 'red';
+                    break;
+                case 'm':
+                    ctx.fillStyle = 'sandybrown';
+                    break;
+                case 'h':
+                    ctx.fillStyle = 'black';
+                    break;
+                case 'ol':
+                case 'or':
+                case 'ou':
+                case 'od':
+                    ctx.fillStyle = 'gray';
+                    break;
+                default:
+                    ctx.fillStyle = 'white';
+            }
+            ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+
+            // Draw glyph
+            ctx.fillStyle = 'black';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            switch (tile) {
+                case 'w':
+                    ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                    break;
+                case 'c':
+                    ctx.fillText('💎', centerX, centerY);
+                    break;
+                case 'x':
+                    ctx.fillText(board.crystals >= board.requiredCrystals ? '🚪' : '🔒', centerX, centerY);
+                    break;
+                case 'm':
+                    ctx.fillText('📦', centerX, centerY);
+                    break;
+                case 'h':
+                    ctx.fillText('🕳️', centerX, centerY);
+                    break;
+                case 'ol':
+                    ctx.fillText('←', centerX, centerY);
+                    break;
+                case 'or':
+                    ctx.fillText('→', centerX, centerY);
+                    break;
+                case 'ou':
+                    ctx.fillText('↑', centerX, centerY);
+                    break;
+                case 'od':
+                    ctx.fillText('↓', centerX, centerY);
+                    break;
+            }
+        }
+
+        function drawBoard() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let y = 0; y < board.tiles.length; y++) {
+                for (let x = 0; x < board.tiles[y].length; x++) {
+                    drawTile(x, y, board.tiles[y][x]);
+                }
+            }
+            
+            // Draw player
+            const playerX = board.player.x * tileSize + tileSize / 2;
+            const playerY = board.player.y * tileSize + tileSize / 2;
+            ctx.fillStyle = 'blue';
+            ctx.beginPath();
+            ctx.arc(playerX, playerY, tileSize / 3, 0, 2 * Math.PI);
+            ctx.fill();
+            // Draw stick figure
+            ctx.strokeStyle = 'white';
+            ctx.beginPath();
+            ctx.moveTo(playerX, playerY + tileSize / 6);
+            ctx.lineTo(playerX, playerY + tileSize / 2.5);
+            ctx.moveTo(playerX - tileSize / 6, playerY + tileSize / 3);
+            ctx.lineTo(playerX + tileSize / 6, playerY + tileSize / 3);
+            ctx.moveTo(playerX, playerY + tileSize / 2.5);
+            ctx.lineTo(playerX - tileSize / 6, playerY + tileSize / 1.8);
+            ctx.moveTo(playerX, playerY + tileSize / 2.5);
+            ctx.lineTo(playerX + tileSize / 6, playerY + tileSize / 1.8);
+            ctx.stroke();
+        }
+
+        function updateCrystalCount() {
+            document.getElementById('crystalCount').textContent = board.crystals;
+        }
+
+        function movePlayer(dx, dy) {
+            const newX = board.player.x + dx;
+            const newY = board.player.y + dy;
+            
+            if (newX < 0 || newX >= board.tiles[0].length || newY < 0 || newY >= board.tiles.length) {
+                return; // Out of bounds
+            }
+            
+            const targetTile = board.tiles[newY][newX];
+            
+            switch (targetTile) {
+                case '.':
+                    board.player.x = newX;
+                    board.player.y = newY;
+                    break;
+                case 'c':
+                    board.player.x = newX;
+                    board.player.y = newY;
+                    board.crystals++;
+                    board.tiles[newY][newX] = '.';
+                    updateCrystalCount();
+                    break;
+                case 'x':
+                    if (board.crystals >= board.requiredCrystals) {
+                        alert('Level Complete!');
+                        // Here you would load the next level
+                    }
+                    break;
+                case 'm':
+                    const pushX = newX + dx;
+                    const pushY = newY + dy;
+                    if (board.tiles[pushY][pushX] === '.') {
+                        board.tiles[pushY][pushX] = 'm';
+                        board.tiles[newY][newX] = '.';
+                        board.player.x = newX;
+                        board.player.y = newY;
+                    }
+                    break;
+                case 'h':
+                    alert('Game Over! You fell into a hole.');
+                    // Here you would reset the level
+                    break;
+                case 'ol':
+                    if (dx === -1) board.player.x = newX;
+                    break;
+                case 'or':
+                    if (dx === 1) board.player.x = newX;
+                    break;
+                case 'ou':
+                    if (dy === -1) board.player.y = newY;
+                    break;
+                case 'od':
+                    if (dy === 1) board.player.y = newY;
+                    break;
+            }
+            
+            drawBoard();
+        }
+
+        document.addEventListener('keydown', (event) => {
+            switch (event.key) {
+                case 'ArrowUp':
+                    movePlayer(0, -1);
+                    break;
+                case 'ArrowDown':
+                    movePlayer(0, 1);
+                    break;
+                case 'ArrowLeft':
+                    movePlayer(-1, 0);
+                    break;
+                case 'ArrowRight':
+                    movePlayer(1, 0);
+                    break;
+            }
+        });
+
+        // Sample level data (you would replace this with your full level data)
+        const sampleLevel = {
+            tiles: [
+                ['w', 'w', 'w', 'w', 'w', 'w', 'w'],
+                ['w', 'p', '.', 'c', 'm', 'c', 'w'],
+                ['w', '.', 'ol', '.', 'or', '.', 'w'],
+                ['w', 'c', 'ou', 'h', 'od', 'c', 'w'],
+                ['w', '.', 'm', '.', 'm', '.', 'w'],
+                ['w', 'c', '.', '.', '.', 'x', 'w'],
+                ['w', 'w', 'w', 'w', 'w', 'w', 'w']
+            ],
+            required_crystals: 3
+        };
+
+        loadLevel(sampleLevel);
+        drawBoard();
+        updateCrystalCount();
+    </script>
+</body>
+</html>

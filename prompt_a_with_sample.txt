@@ -1,0 +1,116 @@
+
+Test Application
+
+Making a game
+
+Platform pure HTML5/javascript - run in the browser with no external dependencies except graphic asset files and css. Css can also be inline in the html file.
+
+
+
+Move a player around the screen (up, down, left, right) to collect all crystals and access the exist. Similar to sokoban with some twists. abbreviation in parantheses, with an optional explanation)
+* (m) pushable blocks -> move them out of the way to allow player to move into the spot.
+    * Requires that the tile on the other side of the block be empty
+    * Can be pushed through one-way doors, but cannot be pushed back.
+* (ol = one way left, or = one way right, ou = one way up, od = one way down) one way doors - the player can pass through in one direction only
+    * Requires an empty tile on the other side
+    * blocks can be pushed through
+* (c) crystals - collecting a crystal will
+    * increment the cystal score
+    * decrease the required number of crystals to open the exit
+* (p) player - the starting tile of the player
+    * different image that indicates which direction the player is facing
+* (w) wall - a rock wall that serves no other purpose than to be an obstacle or boundary. immovable. indestructible.
+* (.) empty - an empty block. player can occupy and blocks can be moved into it
+* (h) hole - a hole. if the player walks into it, the player dies and the level starts over. 
+    * a pushable block can be pushed into a hole and both the block and the hole disappear
+        * the block disappears
+        * the hole disappears (becomes an empty tile)
+        * the player is moved to occupy the tile previously occupied by the block that was pushed
+* (x) exit - the exit door
+    * different image for open/closed
+    * when a player touches an open exit the level is clear
+        * Board is cleared
+        * The next board/level is loaded according to which board ID is specified for this exit tile
+
+Boards aka "Levels" or "Screens"
+
+screens boards 
+  - JSON formatted
+
+sample:
+```json
+{
+    "board": {
+      "id": "7c6a6972-3e93-4bf3-8603-6523f83219a7",
+      "exit_id": "{uuid of the next board to load}",
+       "required_crystals": 3,
+       "size": {
+            // width in number of tiles
+           "width": 32,
+           // height in number of tiles
+           "height": 16, 
+           // the window of visibility. can be a fraction of the total available tiles in either dimension
+           "window": {
+                   // height of the visible window in number of tiles
+                  "width": 10,
+                   // 
+                  "height": 10
+             }
+        },
+        "tiles": [
+                        [ "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+                        [ "w", "w", "w", "w",   "p", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",     ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+                        [ "w", "w", "w", "w",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",     ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+                        [ "w", "w", "w", "w",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",     ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+                        [ "w", "w", "w", "w",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",     ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+                        [ "w", "w", "w", "w",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    ".", ".", ".", ".",   "w", "w", "w", "w",   ".", ".", ".", ".",   ".", ".", ".", ".",     ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+                        [ "w", "w", "w", "w",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    ".", ".", ".", ".",   ".", ".", x, ".",  "w", ".", ".", ".",   ".", ".", ".", ".",     ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+                        [ "w", "w", "w", "w",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    ".", ".", ".", ".",   ".", ".", ".", ".",   "w", ".", ".", ".",   ".", ".", ".", ".",     ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+                        [ "w", "w", "w", "w",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    ".", ".", ".", ".",   ".", ".", ".", "ou", "w", ".", ".", ".",   ".", ".", ".", ".",     ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+                        [ "w", "w", "w", "w",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",     ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+                        [ "w", "w", "w", "w",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",     ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+                        [ "w", "w", "w", "w",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",     ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+                        [ "w", "w", "w", "w",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",     ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+                        [ "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+                        [ "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+                        [ "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+             ]
+     }
+}
+```
+  
+
+
+
+
+
+
+sample:
+```json
+{
+    "board": {
+      "id": "7c6a6972-3e93-4bf3-8603-6523f83219a7",
+      "exit_id": "{uuid of the next board to load}",
+       "required_crystals": 3,
+       "size": {
+            // width in number of tiles
+           "width": 32,
+           // height in number of tiles
+           "height": 16, 
+           // the window of visibility. can be a fraction of the total available tiles in either dimension
+           "window": {
+                   // height of the visible window in number of tiles
+                  "width": 10,
+                   // 
+                  "height": 10
+             }
+        },
+        "tiles": [
+                        [ "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+                        [ "w", "w", "w", "w",   "p", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",     ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+                        [ "w", "w", "w", "w",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",     ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",   ".", ".", ".", ".",    "w", "w", "w", "w",   "w", 
+// lots of rows elided.  for demonstration purposes only.
+                        [ "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",   "w", "w", "w", "w",  "w", "w", "w", "w",  ],
+             ]
+     }
+}
