@@ -15,11 +15,23 @@ class Board {
                 if (this.tiles[y][x] === 'p') {
                     this.startX = x;
                     this.startY = y;
-                    this.tiles[y][x] = '.';
+                    this.tiles[y][x] = '.'; // Replace 'p' with an empty tile
                     return;
                 }
             }
         }
+        // If no 'p' is found, find the first empty space
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                if (this.tiles[y][x] === '.') {
+                    this.startX = x;
+                    this.startY = y;
+                    return;
+                }
+            }
+        }
+        // If no empty space is found, throw an error
+        throw new Error("No valid starting position found on the board");
     }
 
     getTile(x, y) {

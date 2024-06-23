@@ -223,6 +223,21 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (file) {
+        loadBoardFromFile(file)
+            .then(boardData => {
+                initGame(boardData);
+                showMessage('Board loaded successfully!');
+            })
+            .catch(error => {
+                console.error('Error loading board:', error);
+                showMessage('Error loading board. Please try again.');
+            });
+    }
+}
+
 function initGame(boardData) {
     canvas.width = VIEWPORT_WIDTH;
     canvas.height = VIEWPORT_HEIGHT;
@@ -248,6 +263,9 @@ document.addEventListener('keydown', (event) => {
         updateViewport();
     }
 });
+
+document.getElementById('dismissButton').addEventListener('click', hideMessage);
+document.getElementById('loadFile').addEventListener('change', handleFileSelect);
 
 // Load the sample level and start the game
 initGame(sampleLevel);
