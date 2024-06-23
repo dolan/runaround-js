@@ -29,3 +29,7 @@ The timeline of Runaround
      - June 25 - Claude 3.5 Sonnet and I have cycled through about 10 more times
                - added the arbitrary board size / scalable viewport
                - save to file (load from file coming soon)
+ .   - June 26 - Split into multiple files for easier dev
+               - index.html is the new starting point
+               - leaving runaround.html in the repo for reference
+               - loading levels works
