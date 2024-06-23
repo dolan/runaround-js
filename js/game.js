@@ -242,11 +242,16 @@ function initGame(boardData) {
     canvas.width = VIEWPORT_WIDTH;
     canvas.height = VIEWPORT_HEIGHT;
     
-    board = new Board(boardData);
-    player = new Player(board.startX, board.startY);
-    
-    updateGameInfo();
-    gameLoop();
+    try {
+        board = new Board(boardData);
+        player = new Player(board.startX, board.startY);
+        updateGameInfo();
+        updateViewport();
+        gameLoop();
+    } catch (error) {
+        console.error('Error initializing game:', error);
+        showMessage('Error initializing game. Invalid board configuration.');
+    }
 }
 
 document.addEventListener('keydown', (event) => {
@@ -264,8 +269,13 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-document.getElementById('dismissButton').addEventListener('click', hideMessage);
-document.getElementById('loadFile').addEventListener('change', handleFileSelect);
+// Add event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('loadFile').addEventListener('change', handleFileSelect);
+    document.getElementById('saveButton').addEventListener('click', saveBoardToFile);
+    document.getElementById('killButton').addEventListener('click', killYourself);
+    document.getElementById('dismissButton').addEventListener('click', hideMessage);
+});
 
 // Load the sample level and start the game
 initGame(sampleLevel);

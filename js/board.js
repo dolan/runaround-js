@@ -1,9 +1,13 @@
 class Board {
     constructor(data) {
-        this.tiles = data.tiles;
+        if (!data || !data.tiles || !Array.isArray(data.tiles) || data.tiles.length === 0) {
+            throw new Error("Invalid board data");
+        }
+        this.originalTiles = JSON.parse(JSON.stringify(data.tiles)); // Deep copy of original tiles
+        this.tiles = JSON.parse(JSON.stringify(data.tiles)); // Create a separate copy for current state
         this.width = this.tiles[0].length;
         this.height = this.tiles.length;
-        this.requiredCrystals = data.required_crystals;
+        this.requiredCrystals = data.required_crystals || 0;
         this.startX = 0;
         this.startY = 0;
         this.findStartPosition();
@@ -32,6 +36,21 @@ class Board {
         }
         // If no empty space is found, throw an error
         throw new Error("No valid starting position found on the board");
+    }
+
+    reset() {
+        if (!this.originalTiles) {
+            throw new Error("Original tiles are not defined");
+        }
+        this.tiles = JSON.parse(JSON.stringify(this.originalTiles));
+        this.findStartPosition();
+    }
+
+    getOriginalState() {
+        return {
+            tiles: this.originalTiles,
+            required_crystals: this.requiredCrystals
+        };
     }
 
     getTile(x, y) {

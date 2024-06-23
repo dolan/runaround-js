@@ -11,20 +11,8 @@ function hideMessage() {
 }
 
 function saveBoardToFile() {
-    const formatTiles = (tiles) => {
-        const formattedRows = tiles.map(row => 
-            '    [' + row.map(cell => JSON.stringify(cell)).join(', ') + ']'
-        );
-        return '[\n' + formattedRows.join(',\n') + '\n  ]';
-    };
-
-    const tilesString = formatTiles(board.tiles);
-    
-    const jsonString = `{
-        "tiles": ${tilesString},
-        "required_crystals": ${board.requiredCrystals}
-    }`;
-
+    const originalState = board.getOriginalState();
+    const jsonString = JSON.stringify(originalState, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
 
@@ -53,4 +41,18 @@ function loadBoardFromFile(file) {
         reader.onerror = (error) => reject(error);
         reader.readAsText(file);
     });
+}
+
+function resetGame() {
+    board.reset();
+    player = new Player(board.startX, board.startY);
+    updateGameInfo();
+    updateViewport();
+    drawGame();
+    showMessage('Game reset. Good luck!');
+}
+
+function killYourself() {
+    showMessage('You died! The level has been reset.');
+    resetGame();
 }
