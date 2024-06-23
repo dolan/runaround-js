@@ -82,7 +82,7 @@ class Player {
     tryExit() {
         if (this.crystals >= board.requiredCrystals) {
             showMessage('Level Complete!');
-            // Here you would load the next level
+            loadNextLevel();
         }
     }
 
@@ -238,20 +238,38 @@ function handleFileSelect(event) {
     }
 }
 
-function initGame(boardData) {
+let currentLevelIndex = 1;
+
+async function loadLevelFromFile(levelIndex) {
+    const response = await fetch(`levels/level${levelIndex}.json`);
+    if (!response.ok) {
+        throw new Error(`Level ${levelIndex} not found`);
+    }
+    const levelData = await response.json();
+    return levelData;
+}
+
+async function loadNextLevel() {
+    try {
+        const levelData = await loadLevelFromFile(currentLevelIndex);
+        initGame(levelData);
+        currentLevelIndex++;
+        updateViewport(); 
+    } catch (error) {
+        console.log('No more levels found');
+        showMessage('No more levels found');
+    }
+}
+
+async function initGame(boardData) {
     canvas.width = VIEWPORT_WIDTH;
     canvas.height = VIEWPORT_HEIGHT;
-    
-    try {
-        board = new Board(boardData);
-        player = new Player(board.startX, board.startY);
-        updateGameInfo();
-        updateViewport();
-        gameLoop();
-    } catch (error) {
-        console.error('Error initializing game:', error);
-        showMessage('Error initializing game. Invalid board configuration.');
-    }
+
+    board = new Board(boardData);
+    player = new Player(board.startX, board.startY);
+
+    updateGameInfo();
+    gameLoop();
 }
 
 document.addEventListener('keydown', (event) => {
@@ -277,5 +295,5 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('dismissButton').addEventListener('click', hideMessage);
 });
 
-// Load the sample level and start the game
-initGame(sampleLevel);
+// Load the first level
+loadNextLevel();

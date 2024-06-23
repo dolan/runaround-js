@@ -44,12 +44,13 @@ function loadBoardFromFile(file) {
 }
 
 function resetGame() {
-    board.reset();
-    player = new Player(board.startX, board.startY);
-    updateGameInfo();
-    updateViewport();
-    drawGame();
-    showMessage('Game reset. Good luck!');
+    // board.reset();
+    // player = new Player(board.startX, board.startY);
+    // updateGameInfo();
+    // updateViewport();
+    // drawGame();
+    // showMessage('Game reset. Good luck!');
+    loadNextLevel();
 }
 
 function killYourself() {
