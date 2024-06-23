@@ -6,7 +6,48 @@ and re-implementing since I was 14 years old (in 1994). i
 
 ![screenshot](img/screenshot-level2.png)
 
-The timeline of Runaround
+## Directions to play:
+
+* Use the arrow keys to navigate
+* Gather all the crystals until the exit opens, then go into the exit
+* Push blocks into holes to make both disappear
+* Don't fall into holes, or you'll die
+* One way doors are just what they look and sound like.
+* If you get stuck, you can reset the level by clicking on 'Restart'
+
+### Make your own Levels
+You can save and load level files
+* Start by saving or using one of the included levels as a starting point
+* edit the tiles arrays using the symbols below
+||Symbol|Meaning|Walkable?||
+| "." | Empty square | Yes |
+| "w" | Wall | No |
+| "p" | Player | n/a |
+| "c" | Crystal | Yes |
+| "ol" | One-way left | Yes |
+| "or" | One-way right | Yes |
+| "ou" | One-way up | Yes |
+| "ud" | One-way down | Yes |
+| "h" | Hole | No |
+| "m" | Movable Box | Yes |
+
+Specify the number of required crystals as "required_crystals" element in the `level.json`
+```json
+{
+  "tiles": [
+    ["w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w"],
+    ["w", "p", ".", ".", "m", ".", "w", "w", "w", "w", ".", ".", ".", "w"],
+    ["w", ".", "ol", ".", "or", ".", ".", "w", "w", "w", ".", ".", ".", "w"],
+    ["w", "c", "ou", "h", "od", "c", "w", ".", ".", ".", ".", ".", "od", "w"],
+    ["w", ".", "m", ".", "m", ".", ".", ".", ".", ".", ".", "w", "c", "w"],
+    ["w", ".", ".", ".", ".", "x", "w", ".", ".", ".", ".", ".", ".", "w"],
+    ["w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w"]
+  ],
+  "required_crystals": 3
+}
+```
+The board can be any rectangular dimensions, but if you make it too big, it takes long to draw and flickers.
+## The timeline of Runaround
 * 1994 - Originally implemented in Lightspeed C on a Mac Classic
    - The levels were designed by Rob Dolan (my brother)
 * 2000 - Reimplemented in Borland C++ 5.0

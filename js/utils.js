@@ -72,19 +72,13 @@ function loadBoardFromFile(file) {
     });
 }
 
-function resetGame() {
-    // board.reset();
-    // player = new Player(board.startX, board.startY);
-    // updateGameInfo();
-    // updateViewport();
-    // drawGame();
-    // showMessage('Game reset. Good luck!');
-    loadNextLevel();
+// reset the game without changing the level
+function resetGame() { 
+    initGame(board.getOriginalState());
+    board.findStartPosition();
 }
 
 function killYourself() {
     showMessage('You died! The level has been reset.');
-    // keep the same level
-    board.reset();
     resetGame();
 }

@@ -106,7 +106,6 @@ class Player {
         showMessage('Oh snap! You fell into a hole.');
         
         // restart the same level
-        currentLevelIndex--;
         resetGame();
     }
 
