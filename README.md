@@ -28,4 +28,4 @@ The timeline of Runaround
                spec file included in this repo)
      - June 25 - Claude 3.5 Sonnet and I have cycled through about 10 more times
                - added the arbitrary board size / scalable viewport
-
+               - save to file (load from file coming soon)

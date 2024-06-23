@@ -116,18 +116,28 @@
         }
 
         function saveBoardToFile() {
-            const boardData = {
-                tiles: board.tiles,
-                required_crystals: board.requiredCrystals
+            const formatTiles = (tiles) => {
+                const formattedRows = tiles.map(row => 
+                    '    [' + row.map(cell => JSON.stringify(cell)).join(', ') + ']'
+                );
+                return '[\n' + formattedRows.join(',\n') + '\n  ]';
             };
 
-            const jsonString = JSON.stringify(boardData, null, 2);
+            const tilesString = formatTiles(board.tiles);
+            
+            const jsonString = `{
+        "tiles": ${tilesString},
+        "required_crystals": ${board.requiredCrystals}
+        }`;
+
             const blob = new Blob([jsonString], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
 
             const a = document.createElement('a');
             a.href = url;
             a.download = 'board.json';
+            a.setAttribute('content-disposition', 'attachment; filename="board.json"');
+            
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
