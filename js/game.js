@@ -295,7 +295,5 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('saveButton').addEventListener('click', saveBoardToFile);
     document.getElementById('killButton').addEventListener('click', killYourself);
     document.getElementById('dismissButton').addEventListener('click', hideMessage);
+    loadNextLevel();
 });
-
-// Load the first level
-loadNextLevel();
