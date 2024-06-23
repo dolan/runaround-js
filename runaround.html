@@ -95,12 +95,6 @@
             // Clamp viewport to board boundaries
             board.viewport.x = Math.max(0, Math.min(maxX, viewportX));
             board.viewport.y = Math.max(0, Math.min(maxY, viewportY));
-
-            console.log({
-                player: { x: board.player.x, y: board.player.y },
-                viewport: { x: board.viewport.x, y: board.viewport.y },
-                max: { x: maxX, y: maxY }
-            });
         }
 
         function initGame() {
@@ -352,7 +346,6 @@
             }
         });
     
-        initGame();
     </script>
 </body>
 </html>
