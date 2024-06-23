@@ -41,14 +41,27 @@ function hideMessage() {
 
 function saveBoardToFile() {
     const originalState = board.getOriginalState();
-    const jsonString = JSON.stringify(originalState, null, 2);
+    
+    // Format the tiles array with proper double quotes
+    const formattedTiles = originalState.tiles.map(row => 
+        `      [${row.map(tile => `"${tile}"`).join(', ')}]`
+    ).join(',\n');
+
+    // Create the JSON string manually
+    const jsonString = `{
+  "tiles": [
+${formattedTiles}
+  ],
+  "required_crystals": ${originalState.required_crystals}
+}`;
+
     const blob = new Blob([jsonString], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'board.json';
-    a.setAttribute('content-disposition', 'attachment; filename="board.json"');
+    a.download = 'level.json';
+    a.setAttribute('content-disposition', 'attachment; filename="level.json"');
     
     document.body.appendChild(a);
     a.click();
@@ -72,7 +85,6 @@ function loadBoardFromFile(file) {
     });
 }
 
-// reset the game without changing the level
 function resetGame() { 
     initGame(board.getOriginalState());
     board.findStartPosition();
