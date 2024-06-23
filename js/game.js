@@ -103,8 +103,11 @@ class Player {
     }
 
     fallIntoHole() {
-        showMessage('Game Over! You fell into a hole.');
-        // Here you would reset the level
+        showMessage('Oh snap! You fell into a hole.');
+        
+        // restart the same level
+        currentLevelIndex--;
+        resetGame();
     }
 
     moveOnOneWay(x, y, dx, dy) {
