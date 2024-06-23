@@ -1,11 +1,12 @@
 body {
-    margin: 0;
-    padding: 0;
+    font-family: 'Courier New', monospace;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    height: 100vh;
-    background-color: #f0f0f0;
+    background-color: #222;
+    color: #fff;
+    margin: 0;
+    padding: 20px;
 }
 
 #game-container {
@@ -13,21 +14,47 @@ body {
 }
 
 #gameCanvas {
-    border: 1px solid #000;
+    border: 1px solid #444;
 }
 
+#game-info {
+    margin-top: 10px;
+    text-align: center;
+}
 
-#saveButton {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 5px 10px;
-    background-color: #4CAF50;
-    color: white;
+#controls {
+    margin-top: 20px;
+}
+
+#saveButton, #dismissButton {
+    background-color: #444;
     border: none;
+    color: #fff;
+    padding: 10px 20px;
+    margin: 0 10px;
     cursor: pointer;
+    font-family: 'Courier New', monospace;
 }
 
-#saveButton:hover {
-    background-color: #45a049;
+#loadFile {
+    display: inline-block;
+    margin-left: 10px;
+}
+
+#messagePanel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #000;
+    border: 1px solid #444;
+    padding: 20px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+}
+
+#messageText {
+    margin-bottom: 20px;
+    text-align: center;
 }

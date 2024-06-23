@@ -2,26 +2,38 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 const TILE_SIZE = 32;
-const VIEWPORT_WIDTH = 800;
-const VIEWPORT_HEIGHT = 600;
+const VIEWPORT_WIDTH = 640;
+const VIEWPORT_HEIGHT = 480;
+const VIEWPORT_TILES_X = VIEWPORT_WIDTH / TILE_SIZE;
+const VIEWPORT_TILES_Y = VIEWPORT_HEIGHT / TILE_SIZE;
 
 let board;
 let player;
 let viewportX = 0;
 let viewportY = 0;
 
-const gameColors = [
-    '#f0f0f0', // 0: Empty space (Light Gray)
-    '#1a4ba0', // 1: Wall (Dark Blue)
-    '#06d6a0', // 2: Crystal (Turquoise)
-    '#f0f0f0', // 3: Movable block (Light Gray)
-    '#118ab2', // 4: Exit (Blue)
-    '#ffd166', // 5-8: One-way doors (Yellow, Orange, Red, Pink)
-    '#ffd166', 
-    '#ffd166', 
-    '#ffd166', 
-    '#f0f0f0'  // 9: Hole (Light Gray)
-];
+const gameColors = {
+    background: '#f0f0f0',
+    text: '#333333',
+    gridBorder: '#666666',
+    wall: '#1a4ba0',
+    player: '#e63946',
+    crystal: '#06d6a0',
+    obstacle: '#ffd166',
+    exit: '#118ab2'
+};
+
+const glyphs = {
+    crystal: '💎',
+    openDoor: '🚪',
+    closedDoor: '🔒',
+    movable: '📦',
+    hole: '🕳️',
+    upArrow: '↑',
+    downArrow: '↓',
+    leftArrow: '←',
+    rightArrow: '→',
+};
 
 class Player {
     constructor(x, y) {
@@ -35,40 +47,26 @@ class Player {
         const newY = this.y + dy;
         if (newX >= 0 && newX < board.width && newY >= 0 && newY < board.height) {
             const tile = board.getTile(newX, newY);
-            if (tile === 0 || tile === 2 || tile === 4) { // Empty space, crystal, or exit
-                this.x = newX;
-                this.y = newY;
-                if (tile === 2) {
-                    this.collectCrystal(newX, newY);
-                } else if (tile === 4 && this.crystals >= board.requiredCrystals) {
-                    showMessage('Level Complete!');
-                    // Add level completion logic here
-                }
-            } else if (tile === 3) { // Movable block
-                const pushX = newX + dx;
-                const pushY = newY + dy;
-                if (pushX >= 0 && pushX < board.width && pushY >= 0 && pushY < board.height) {
-                    const pushTile = board.getTile(pushX, pushY);
-                    if (pushTile === 0) { // Can push the block
-                        board.moveBlock(newX, newY, pushX, pushY);
-                        this.x = newX;
-                        this.y = newY;
-                    } else if (pushTile === 9) { // Push block into hole
-                        board.removeBlock(newX, newY);
-                        board.setTile(pushX, pushY, 0); // Fill the hole
-                        this.x = newX;
-                        this.y = newY;
-                    }
-                }
-            } else if (tile >= 5 && tile <= 8) { // One-way door
-                const direction = tile - 5;
-                if ((direction === 0 && dy === -1) || // Up
-                    (direction === 1 && dx === 1) ||  // Right
-                    (direction === 2 && dy === 1) ||  // Down
-                    (direction === 3 && dx === -1)) { // Left
+            switch(tile) {
+                case '.':
                     this.x = newX;
                     this.y = newY;
-                }
+                    break;
+                case 'c':
+                    this.collectCrystal(newX, newY);
+                    break;
+                case 'x':
+                    this.tryExit();
+                    break;
+                case 'm':
+                    this.pushMovable(newX, newY, dx, dy);
+                    break;
+                case 'h':
+                    this.fallIntoHole();
+                    break;
+                case 'ol': case 'or': case 'ou': case 'od':
+                    this.moveOnOneWay(newX, newY, dx, dy);
+                    break;
             }
         }
     }
@@ -76,100 +74,49 @@ class Player {
     collectCrystal(x, y) {
         board.removeCrystal(x, y);
         this.crystals++;
+        this.x = x;
+        this.y = y;
         updateGameInfo();
     }
-}
 
-async function loadBoardFromApp(levelName) {
-    try {
-        const response = await fetch(`levels/${levelName}.json`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+    tryExit() {
+        if (this.crystals >= board.requiredCrystals) {
+            showMessage('Level Complete!');
+            // Here you would load the next level
         }
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error("Could not load the board file:", error);
-        showMessage('Failed to load level data, using random board instead.');
-        initGame();
     }
-}
 
-function loadBoardFromFile(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const data = JSON.parse(event.target.result);
-                resolve(data);
-            } catch (error) {
-                reject(error);
-            }
-        };
-        reader.onerror = (error) => reject(error);
-        reader.readAsText(file);
-    });
-}
-
-function initGame(boardData = null) {
-    canvas.width = VIEWPORT_WIDTH;
-    canvas.height = VIEWPORT_HEIGHT;
-    
-    if (boardData) {
-        board = new Board(0, 0, boardData);
-    } else {
-        board = new Board(50, 50);
-        
-        // Initialize board with some walls, crystals, blocks, and holes
-        for (let i = 0; i < 100; i++) {
-            const x = Math.floor(Math.random() * board.width);
-            const y = Math.floor(Math.random() * board.height);
-            board.setTile(x, y, 1); // Add walls
+    pushMovable(x, y, dx, dy) {
+        const pushX = x + dx;
+        const pushY = y + dy;
+        if (board.getTile(pushX, pushY) === '.') {
+            board.setTile(pushX, pushY, 'm');
+            board.setTile(x, y, '.');
+            this.x = x;
+            this.y = y;
+        } else if (board.getTile(pushX, pushY) === 'h') {
+            board.setTile(pushX, pushY, '.');
+            board.setTile(x, y, '.');
+            this.x = x;
+            this.y = y;
         }
-        
-        for (let i = 0; i < 20; i++) {
-            const x = Math.floor(Math.random() * board.width);
-            const y = Math.floor(Math.random() * board.height);
-            if (board.getTile(x, y) === 0) board.addCrystal(x, y);
-        }
-        
-        for (let i = 0; i < 5; i++) {
-            const x = Math.floor(Math.random() * board.width);
-            const y = Math.floor(Math.random() * board.height);
-            if (board.getTile(x, y) === 0) board.addMovableBlock(x, y);
-        }
-        
-        for (let i = 0; i < 5; i++) {
-            const x = Math.floor(Math.random() * board.width);
-            const y = Math.floor(Math.random() * board.height);
-            if (board.getTile(x, y) === 0) board.addHole(x, y);
-        }
-        
-        // Add exit
-        const exitX = Math.floor(Math.random() * board.width);
-        const exitY = Math.floor(Math.random() * board.height);
-        board.setTile(exitX, exitY, 4);
-        
-        board.setRequiredCrystals(10);
     }
-    
-    // Find a valid starting position for the player
-    let playerX, playerY;
-    do {
-        playerX = Math.floor(Math.random() * board.width);
-        playerY = Math.floor(Math.random() * board.height);
-    } while (board.getTile(playerX, playerY) !== 0);
-    
-    player = new Player(playerX, playerY);
-    
-    updateGameInfo();
-    gameLoop();
-}
 
-function gameLoop() {
-    updateViewport();
-    drawGame();
-    requestAnimationFrame(gameLoop);
+    fallIntoHole() {
+        showMessage('Game Over! You fell into a hole.');
+        // Here you would reset the level
+    }
+
+    moveOnOneWay(x, y, dx, dy) {
+        const tileType = board.getTile(x, y);
+        if ((tileType === 'ol' && dx === -1) ||
+            (tileType === 'or' && dx === 1) ||
+            (tileType === 'ou' && dy === -1) ||
+            (tileType === 'od' && dy === 1)) {
+            this.x = x;
+            this.y = y;
+        }
+    }
 }
 
 function updateViewport() {
@@ -180,184 +127,127 @@ function updateViewport() {
 function drawGame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Draw tiles
-    for (let y = 0; y < board.height; y++) {
-        for (let x = 0; x < board.width; x++) {
-            const screenX = x * TILE_SIZE - viewportX;
-            const screenY = y * TILE_SIZE - viewportY;
-            
-            if (screenX >= -TILE_SIZE && screenX <= VIEWPORT_WIDTH && screenY >= -TILE_SIZE && screenY <= VIEWPORT_HEIGHT) {
+    const startX = Math.floor(viewportX / TILE_SIZE);
+    const startY = Math.floor(viewportY / TILE_SIZE);
+    const endX = startX + VIEWPORT_TILES_X + 1;
+    const endY = startY + VIEWPORT_TILES_Y + 1;
+    
+    for (let y = startY; y < endY; y++) {
+        for (let x = startX; x < endX; x++) {
+            if (x >= 0 && x < board.width && y >= 0 && y < board.height) {
                 const tile = board.getTile(x, y);
-                ctx.fillStyle = gameColors[tile];
-                ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
-                
-                ctx.fillStyle = '#FFFFFF';
-                ctx.font = `bold ${TILE_SIZE * 0.7}px Arial`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-
-                switch (tile) {
-                    case 2: // Crystal
-                        ctx.fillText('💎', screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
-                        break;
-                    case 3: // Movable block
-                        ctx.fillText('📦', screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
-                        break;
-                    case 4: // Exit
-                        ctx.fillText(player.crystals >= board.requiredCrystals ? '🚪' : '🔒', 
-                                     screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
-                        break;
-                    case 5: // One-way door (Up)
-                        ctx.fillText('↑', screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
-                        break;
-                    case 6: // One-way door (Right)
-                        ctx.fillText('→', screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
-                        break;
-                    case 7: // One-way door (Down)
-                        ctx.fillText('↓', screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
-                        break;
-                    case 8: // One-way door (Left)
-                        ctx.fillText('←', screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
-                        break;
-                    case 9: // Hole
-                        ctx.fillText('⚫', screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
-                        break;
-                }
+                drawTile(x, y, tile);
             }
         }
     }
     
-    // Draw player (stick figure)
-    const playerScreenX = player.x * TILE_SIZE - viewportX;
-    const playerScreenY = player.y * TILE_SIZE - viewportY;
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 2;
-    // Head
+    drawPlayer();
+}
+
+function drawTile(x, y, tile) {
+    const screenX = x * TILE_SIZE - viewportX;
+    const screenY = y * TILE_SIZE - viewportY;
+    
+    ctx.fillStyle = getTileColor(tile);
+    ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
+    
+    const glyph = getTileGlyph(tile);
+    if (glyph) {
+        ctx.fillStyle = 'black';
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(glyph, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
+    }
+}
+
+function getTileColor(tile) {
+    const colorMap = {
+        'w': gameColors.wall,
+        '.': gameColors.background,
+        'c': gameColors.background,
+        'x': gameColors.exit,
+        'm': gameColors.background,
+        'h': gameColors.background,
+        'ol': gameColors.obstacle,
+        'or': gameColors.obstacle,
+        'ou': gameColors.obstacle,
+        'od': gameColors.obstacle
+    };
+    return colorMap[tile] || 'white';
+}
+
+function getTileGlyph(tile) {
+    const glyphMap = {
+        'c': glyphs.crystal,
+        'x': player.crystals >= board.requiredCrystals ? glyphs.openDoor : glyphs.closedDoor,
+        'm': glyphs.movable,
+        'h': glyphs.hole,
+        'ol': glyphs.leftArrow,
+        'or': glyphs.rightArrow,
+        'ou': glyphs.upArrow,
+        'od': glyphs.downArrow
+    };
+    return glyphMap[tile] || '';
+}
+
+function drawPlayer() {
+    const screenX = player.x * TILE_SIZE - viewportX + TILE_SIZE / 2;
+    const screenY = player.y * TILE_SIZE - viewportY + TILE_SIZE / 2;
+    
+    ctx.fillStyle = 'black';
     ctx.beginPath();
-    ctx.arc(playerScreenX + TILE_SIZE / 2, playerScreenY + TILE_SIZE / 5, TILE_SIZE / 10, 0, Math.PI * 2);
-    ctx.stroke();
-    // Body
+    ctx.arc(screenX, screenY, TILE_SIZE / 5, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    ctx.strokeStyle = 'black';
     ctx.beginPath();
-    ctx.moveTo(playerScreenX + TILE_SIZE / 2, playerScreenY + TILE_SIZE / 5);
-    ctx.lineTo(playerScreenX + TILE_SIZE / 2, playerScreenY + TILE_SIZE * 4/5);
-    ctx.stroke();
-    // Arms
-    ctx.beginPath();
-    ctx.moveTo(playerScreenX + TILE_SIZE / 4, playerScreenY + TILE_SIZE / 2);
-    ctx.lineTo(playerScreenX + TILE_SIZE * 3/4, playerScreenY + TILE_SIZE / 2);
-    ctx.stroke();
-    // Legs
-    ctx.beginPath();
-    ctx.moveTo(playerScreenX + TILE_SIZE / 2, playerScreenY + TILE_SIZE * 4/5);
-    ctx.lineTo(playerScreenX + TILE_SIZE / 4, playerScreenY + TILE_SIZE);
-    ctx.moveTo(playerScreenX + TILE_SIZE / 2, playerScreenY + TILE_SIZE * 4/5);
-    ctx.lineTo(playerScreenX + TILE_SIZE * 3/4, playerScreenY + TILE_SIZE);
+    ctx.moveTo(screenX, screenY + TILE_SIZE / 6);
+    ctx.lineTo(screenX, screenY + TILE_SIZE / 2.5);
+    ctx.moveTo(screenX - TILE_SIZE / 6, screenY + TILE_SIZE / 3);
+    ctx.lineTo(screenX + TILE_SIZE / 6, screenY + TILE_SIZE / 3);
+    ctx.moveTo(screenX, screenY + TILE_SIZE / 2.5);
+    ctx.lineTo(screenX - TILE_SIZE / 6, screenY + TILE_SIZE / 1.8);
+    ctx.moveTo(screenX, screenY + TILE_SIZE / 2.5);
+    ctx.lineTo(screenX + TILE_SIZE / 6, screenY + TILE_SIZE / 1.8);
     ctx.stroke();
 }
 
 function updateGameInfo() {
-    const crystalCount = document.getElementById('crystal-count');
-    const requiredCrystals = document.getElementById('required-crystals');
-    if (crystalCount && requiredCrystals) {
-        crystalCount.textContent = `Crystals: ${player.crystals}`;
-        requiredCrystals.textContent = `Required: ${board.requiredCrystals}`;
-    }
+    document.getElementById('crystal-count').textContent = player.crystals;
 }
 
-function handleKeyDown(e) {
-    switch (e.key) {
-        case 'ArrowUp':
-            player.move(0, -1);
-            break;
-        case 'ArrowDown':
-            player.move(0, 1);
-            break;
-        case 'ArrowLeft':
-            player.move(-1, 0);
-            break;
-        case 'ArrowRight':
-            player.move(1, 0);
-            break;
-    }
+function gameLoop() {
+    updateViewport();
+    drawGame();
+    requestAnimationFrame(gameLoop);
 }
 
-function handleFileLoad(event) {
-    const file = event.target.files[0];
-    if (file) {
-        loadBoardFromFile(file)
-            .then(boardData => {
-                initGame(boardData);
-            })
-            .catch(error => {
-                console.error("Error loading board file:", error);
-                showMessage("Failed to load board file. Using random board instead.");
-                initGame();
-            });
-    }
+function initGame(boardData) {
+    canvas.width = VIEWPORT_WIDTH;
+    canvas.height = VIEWPORT_HEIGHT;
+    
+    board = new Board(boardData);
+    player = new Player(board.startX, board.startY);
+    
+    updateGameInfo();
+    gameLoop();
 }
 
-function handleLevelSelect(event) {
-    const levelName = event.target.value;
-    if (levelName) {
-        loadBoardFromApp(levelName)
-            .then(boardData => {
-                if (boardData) {
-                    initGame(boardData);
-                } else {
-                    throw new Error("Failed to load level data");
-                }
-            })
-            .catch(error => {
-                console.error("Error loading level:", error);
-                showMessage("Failed to load level. Using random board instead.");
-                initGame();
-            });
+document.addEventListener('keydown', (event) => {
+    const moveMap = {
+        'ArrowUp': [0, -1],
+        'ArrowDown': [0, 1],
+        'ArrowLeft': [-1, 0],
+        'ArrowRight': [1, 0]
+    };
+    
+    const [dx, dy] = moveMap[event.key] || [0, 0];
+    if (dx !== 0 || dy !== 0) {
+        player.move(dx, dy);
+        updateViewport();
     }
-}
+});
 
-function showMessage(message, duration = 3000) {
-    const messageElement = document.getElementById('message');
-    if (!messageElement) {
-        const newMessageElement = document.createElement('div');
-        newMessageElement.id = 'message';
-        newMessageElement.style.position = 'absolute';
-        newMessageElement.style.top = '10px';
-        newMessageElement.style.left = '50%';
-        newMessageElement.style.transform = 'translateX(-50%)';
-        newMessageElement.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        newMessageElement.style.color = 'white';
-        newMessageElement.style.padding = '10px';
-        newMessageElement.style.borderRadius = '5px';
-        newMessageElement.style.zIndex = '1000';
-        newMessageElement.style.display = 'none';
-        document.body.appendChild(newMessageElement);
-    }
-
-    const element = document.getElementById('message');
-    element.textContent = message;
-    element.style.display = 'block';
-
-    setTimeout(() => {
-        element.style.display = 'none';
-    }, duration);
-}
-
-function initialize() {
-    const loadFileInput = document.getElementById('loadFile');
-    const levelSelect = document.getElementById('levelSelect');
-
-    if (loadFileInput) {
-        loadFileInput.addEventListener('change', handleFileLoad);
-    }
-
-    if (levelSelect) {
-        levelSelect.addEventListener('change', handleLevelSelect);
-    }
-
-    document.addEventListener('keydown', handleKeyDown);
-
-    initGame();
-}
-
-// Wait for the DOM to be fully loaded before initializing the game
-document.addEventListener('DOMContentLoaded', initialize);
+// Load the sample level and start the game
+initGame(sampleLevel);

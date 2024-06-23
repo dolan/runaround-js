@@ -3,29 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Runaround Game with Scrolling Viewport</title>
+    <title>Runaround Game</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
         <div id="game-info">
-            <span id="crystal-count">Crystals: 0</span>
-            <span id="required-crystals">Required: 0</span>
-        </div>
-        <div id="message">
+            <span>Crystals: <span id="crystal-count">0</span></span>
         </div>
     </div>
     <div id="controls">
-        <button id="saveButton">Save Board</button>
-        <select id="levelSelect">
-            <option value="">Select a level</option>
-            <option value="level1">Level 1</option>
-            <option value="level2">Level 2</option>
-            <option value="level3">Level 3</option>
-        </select>
+        <button id="saveButton">Save Level</button>
         <input type="file" id="loadFile" accept=".json">
     </div>
+    <div id="messagePanel">
+        <div id="messageText"></div>
+        <button id="dismissButton">OK</button>
+    </div>
+    <script src="js/utils.js"></script>
     <script src="js/board.js"></script>
     <script src="js/game.js"></script>
 </body>
