@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sokoban-like Game</title>
+    <title>Runaround by Dave Dolan</title>
     <style>
         body {
             font-family: 'Courier New', monospace;
@@ -49,24 +49,86 @@
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="320" height="320"></canvas>
+    <canvas id="gameCanvas" width="640" height="480"></canvas>
     <div id="messagePanel">
         <div id="messageText"></div>
         <button id="dismissButton">OK</button>
     </div>
     <div>Crystals: <span id="crystalCount">0</span></div>
     <script>
+        const tileSize = 32;
+        const viewportSize = 20;
+
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const tileSize = 32;
-        
+
         let board = {
             tiles: [],
             player: { x: 0, y: 0 },
             crystals: 0,
-            requiredCrystals: 3
+            requiredCrystals: 3,
+            viewport: {
+                x: 0,
+                y: 0
+            }
         };
-    
+
+        function resizeCanvas() {
+            canvas.width = viewportSize * tileSize;
+            canvas.height = viewportSize * tileSize;
+            ctx.imageSmoothingEnabled = false;  // This keeps pixel art sharp
+        }
+
+        function initViewport() {
+            board.viewport = { x: 0, y: 0 };
+            updateViewport();
+        }
+
+        function updateViewport() {
+            const maxX = Math.max(0, board.tiles[0].length - viewportSize);
+            const maxY = Math.max(0, board.tiles.length - viewportSize);
+
+            // Try to center the player
+            let viewportX = Math.floor(board.player.x - viewportSize / 2);
+            let viewportY = Math.floor(board.player.y - viewportSize / 2);
+
+            // Clamp viewport to board boundaries
+            board.viewport.x = Math.max(0, Math.min(maxX, viewportX));
+            board.viewport.y = Math.max(0, Math.min(maxY, viewportY));
+
+            console.log({
+                player: { x: board.player.x, y: board.player.y },
+                viewport: { x: board.viewport.x, y: board.viewport.y },
+                max: { x: maxX, y: maxY }
+            });
+        }
+
+        function initGame() {
+            resizeCanvas();
+            loadLevel(sampleLevel);
+            initViewport();
+            drawBoard();
+            updateCrystalCount();
+        }
+
+        // Sample level data
+        const sampleLevel = {
+            tiles: [
+                ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
+                ['w', 'p', '.', '.', 'm', '.', '.', '.', '.', '.', '.', 'w', 'w', 'w', 'w', 'w', 'w', 'w', '.', '.', '.', 'w'],
+                ['w', '.', 'ol', '.', 'or', '.', '.', '.', '.', '.', '.', '.','w', 'w', 'w', 'w', 'w', 'w', '.', '.', '.', 'w'],
+                ['w', 'c', 'ou', 'h', 'od', 'c', 'w','.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.','od', 'w'],
+                ['w', '.', 'm', '.', 'm', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', 'w', 'c', 'w'],
+                ['w', '.', '.', '.', '.', 'x', 'w', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', 'w'],
+                ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w']
+            ],
+            required_crystals: 3
+        };
+
+        // When the page loads, call initGame
+        window.onload = initGame;
+
+        
         function showMessage(message) {
             messageText.textContent = message;
             messagePanel.style.display = 'flex';
@@ -80,18 +142,22 @@
             board.tiles = levelData.tiles;
             board.requiredCrystals = levelData.required_crystals;
             
+            initViewport();
             for (let y = 0; y < board.tiles.length; y++) {
                 for (let x = 0; x < board.tiles[y].length; x++) {
                     if (board.tiles[y][x] === 'p') {
                         board.player.x = x;
                         board.player.y = y;
                         board.tiles[y][x] = '.';
+                        updateViewport();
                         return;
                     }
                 }
             }
         }
     
+// updateViewport() 
+
         function getTileColor(tile) {
             const colorMap = {
                 'w': 'brown',
@@ -123,11 +189,13 @@
         }
     
         function drawTile(x, y, tile) {
-            const centerX = x * tileSize + tileSize / 2;
-            const centerY = y * tileSize + tileSize / 2;
+            const screenX = (x - board.viewport.x) * tileSize;
+            const screenY = (y - board.viewport.y) * tileSize;
+            const centerX = screenX + tileSize / 2;
+            const centerY = screenY + tileSize / 2;
     
             ctx.fillStyle = getTileColor(tile);
-            ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+            ctx.fillRect(screenX, screenY, tileSize, tileSize);
     
             const glyph = getTileGlyph(tile);
             if (glyph) {
@@ -140,33 +208,35 @@
         }
     
         function drawPlayer(x, y) {
-            const playerX = x * tileSize + tileSize / 2;
-            const playerY = y * tileSize + tileSize / 2;
+            const screenX = (x - board.viewport.x) * tileSize + tileSize / 2;
+            const screenY = (y - board.viewport.y) * tileSize + tileSize / 2;
             
             ctx.fillStyle = 'black';
             ctx.beginPath();
-            ctx.arc(playerX, playerY, tileSize / 5, 0, 2 * Math.PI);
+            ctx.arc(screenX, screenY, tileSize / 5, 0, 2 * Math.PI);
             ctx.fill();
             
             ctx.strokeStyle = 'black';
             ctx.beginPath();
-            ctx.moveTo(playerX, playerY + tileSize / 6);
-            ctx.lineTo(playerX, playerY + tileSize / 2.5);
-            ctx.moveTo(playerX - tileSize / 6, playerY + tileSize / 3);
-            ctx.lineTo(playerX + tileSize / 6, playerY + tileSize / 3);
-            ctx.moveTo(playerX, playerY + tileSize / 2.5);
-            ctx.lineTo(playerX - tileSize / 6, playerY + tileSize / 1.8);
-            ctx.moveTo(playerX, playerY + tileSize / 2.5);
-            ctx.lineTo(playerX + tileSize / 6, playerY + tileSize / 1.8);
+            ctx.moveTo(screenX, screenY + tileSize / 6);
+            ctx.lineTo(screenX, screenY + tileSize / 2.5);
+            ctx.moveTo(screenX - tileSize / 6, screenY + tileSize / 3);
+            ctx.lineTo(screenX + tileSize / 6, screenY + tileSize / 3);
+            ctx.moveTo(screenX, screenY + tileSize / 2.5);
+            ctx.lineTo(screenX - tileSize / 6, screenY + tileSize / 1.8);
+            ctx.moveTo(screenX, screenY + tileSize / 2.5);
+            ctx.lineTo(screenX + tileSize / 6, screenY + tileSize / 1.8);
             ctx.stroke();
         }
     
         function drawBoard() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            for (let y = 0; y < board.tiles.length; y++) {
-                for (let x = 0; x < board.tiles[y].length; x++) {
-                    drawTile(x, y, board.tiles[y][x]);
+            for (let y = board.viewport.y; y < board.viewport.y + viewportSize; y++) {
+                for (let x = board.viewport.x; x < board.viewport.x + viewportSize; x++) {
+                    if (y < board.tiles.length && x < board.tiles[y].length) {
+                        drawTile(x, y, board.tiles[y][x]);
+                    }
                 }
             }
             
@@ -264,7 +334,7 @@
                     handleOneWayTile(newX, newY, dx, dy);
                     break;
             }
-            
+            updateViewport();
             drawBoard();
         }
     
@@ -282,23 +352,7 @@
             }
         });
     
-        // Sample level data (you would replace this with your full level data)
-        const sampleLevel = {
-            tiles: [
-                ['w', 'w', 'w', 'w', 'w', 'w', 'w'],
-                ['w', 'p', '.', '.', 'm', '.', 'w'],
-                ['w', '.', 'ol', '.', 'or', '.', 'w'],
-                ['w', 'c', 'ou', 'h', 'od', 'c', 'w'],
-                ['w', '.', 'm', '.', 'm', '.', 'w'],
-                ['w', 'c', '.', '.', '.', 'x', 'w'],
-                ['w', 'w', 'w', 'w', 'w', 'w', 'w']
-            ],
-            required_crystals: 3
-        };
-    
-        loadLevel(sampleLevel);
-        drawBoard();
-        updateCrystalCount();
+        initGame();
     </script>
 </body>
 </html>
