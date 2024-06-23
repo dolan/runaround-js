@@ -230,15 +230,24 @@
                 case 'm':
                     const pushX = newX + dx;
                     const pushY = newY + dy;
-                    if (board.tiles[pushY][pushX] === '.') {
-                        board.tiles[pushY][pushX] = 'm';
-                        board.tiles[newY][newX] = '.';
-                        board.player.x = newX;
-                        board.player.y = newY;
+                    switch(board.tiles[pushY][pushX]) {
+                        case '.':
+                            board.tiles[pushY][pushX] = 'm';
+                            board.tiles[newY][newX] = '.';
+                            board.player.x = newX;
+                            board.player.y = newY;
+                            break;
+                        case 'h':
+                            board.tiles[pushY][pushX] = '.';
+                            board.tiles[newY][newX] = '.';
+                            board.player.x = newX;
+                            board.player.y = newY;
+                            
+                            break;
                     }
                     break;
                 case 'h':
-                    alert('Game Over! You fell into a hole.');
+                    showMessage('Game Over! You fell into a hole.');
                     // Here you would reset the level
                     break;
                 case 'ol':
