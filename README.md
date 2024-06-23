@@ -4,6 +4,8 @@ My "Runaround" game implemented in HTML5/JS as a test of code generation assista
 The 'runaround' game concept is a project that I have been implementing
 and re-implementing since I was 14 years old (in 1994). i
 
+![screenshot](img/screenshot-level2.png)
+
 The timeline of Runaround
 * 1994 - Originally implemented in Lightspeed C on a Mac Classic
    - The levels were designed by Rob Dolan (my brother)
@@ -29,7 +31,10 @@ The timeline of Runaround
      - June 25 - Claude 3.5 Sonnet and I have cycled through about 10 more times
                - added the arbitrary board size / scalable viewport
                - save to file (load from file coming soon)
- .   - June 26 - Split into multiple files for easier dev
+    - June 26 - Split into multiple files for easier dev
                - index.html is the new starting point
                - leaving runaround.html in the repo for reference
                - loading levels works
+
+
+    

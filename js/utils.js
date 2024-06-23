@@ -84,5 +84,7 @@ function resetGame() {
 
 function killYourself() {
     showMessage('You died! The level has been reset.');
+    // keep the same level
+    board.reset();
     resetGame();
 }

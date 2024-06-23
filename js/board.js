@@ -43,6 +43,7 @@ class Board {
             throw new Error("Original tiles are not defined");
         }
         this.tiles = JSON.parse(JSON.stringify(this.originalTiles));
+        this.player.crystals = 0;
         this.findStartPosition();
     }
 
