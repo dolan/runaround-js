@@ -19,7 +19,8 @@ and re-implementing since I was 14 years old (in 1994). i
 You can save and load level files
 * Start by saving or using one of the included levels as a starting point
 * edit the tiles arrays using the symbols below
-||Symbol|Meaning|Walkable?||
+|Symbol|Meaning|Walkable?|
+|------|-------------|-------|
 | "." | Empty square | Yes |
 | "w" | Wall | No |
 | "p" | Player | n/a |
