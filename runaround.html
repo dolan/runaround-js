@@ -5,13 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sokoban-like Game</title>
     <style>
+        body {
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #222;
+            color: #fff;
+        }
         canvas {
-            border: 1px solid black;
+            border: 1px solid #444;
+            margin-bottom: 10px;
+        }
+        #messagePanel {
+            width: 320px;
+            height: 80px;
+            background-color: #000;
+            border: 1px solid #444;
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 10px;
+            box-sizing: border-box;
+            image-rendering: pixelated;
+        }
+        #messageText {
+            font-size: 16px;
+            text-align: center;
+            word-wrap: break-word;
+        }
+        #dismissButton {
+            align-self: center;
+            background-color: #444;
+            border: none;
+            color: #fff;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+        }
+        #crystalCount {
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas" width="320" height="320"></canvas>
+    <div id="messagePanel">
+        <div id="messageText"></div>
+        <button id="dismissButton">OK</button>
+    </div>
     <div>Crystals: <span id="crystalCount">0</span></div>
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -24,6 +66,15 @@
             crystals: 0,
             requiredCrystals: 3
         };
+
+        function showMessage(message) {
+            messageText.textContent = message;
+            messagePanel.style.display = 'flex';
+        }
+
+        dismissButton.addEventListener('click', () => {
+            messagePanel.style.display = 'none';
+        });
 
         function loadLevel(levelData) {
             board.tiles = levelData.tiles;
@@ -55,16 +106,16 @@
                     ctx.fillStyle = 'lightgray';
                     break;
                 case 'c':
-                    ctx.fillStyle = 'yellow';
+                    ctx.fillStyle = 'lightgray';
                     break;
                 case 'x':
                     ctx.fillStyle = board.crystals >= board.requiredCrystals ? 'green' : 'red';
                     break;
                 case 'm':
-                    ctx.fillStyle = 'sandybrown';
+                    ctx.fillStyle = 'lightgray';
                     break;
                 case 'h':
-                    ctx.fillStyle = 'black';
+                    ctx.fillStyle = 'lightgray';
                     break;
                 case 'ol':
                 case 'or':
@@ -126,12 +177,12 @@
             // Draw player
             const playerX = board.player.x * tileSize + tileSize / 2;
             const playerY = board.player.y * tileSize + tileSize / 2;
-            ctx.fillStyle = 'blue';
+            ctx.fillStyle = 'black';
             ctx.beginPath();
-            ctx.arc(playerX, playerY, tileSize / 3, 0, 2 * Math.PI);
+            ctx.arc(playerX, playerY, tileSize / 5, 0, 2 * Math.PI);
             ctx.fill();
             // Draw stick figure
-            ctx.strokeStyle = 'white';
+            ctx.strokeStyle = 'black';
             ctx.beginPath();
             ctx.moveTo(playerX, playerY + tileSize / 6);
             ctx.lineTo(playerX, playerY + tileSize / 2.5);
@@ -172,7 +223,7 @@
                     break;
                 case 'x':
                     if (board.crystals >= board.requiredCrystals) {
-                        alert('Level Complete!');
+                        showMessage('Level Complete!');
                         // Here you would load the next level
                     }
                     break;
