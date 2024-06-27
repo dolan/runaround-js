@@ -137,9 +137,9 @@
             const tilesString = formatTiles(board.tiles);
             
             const jsonString = `{
-        "tiles": ${tilesString},
-        "required_crystals": ${board.requiredCrystals}
-        }`;
+                "tiles": ${tilesString},
+                "required_crystals": ${board.requiredCrystals}
+            }`;
 
             const blob = new Blob([jsonString], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
