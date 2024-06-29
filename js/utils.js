@@ -39,22 +39,27 @@ function hideMessage() {
     }
 }
 
+function formatBoard(board) {
+    let serialized = '{\n';
+    serialized += '    "tiles": [\n';
+    board.tiles.forEach((row, index) => {
+        serialized += '      ' + JSON.stringify(row);
+        if (index < board.tiles.length - 1) {
+            serialized += ',';
+        }
+        serialized += '\n';
+    });
+    serialized += '    ],\n';
+    serialized += `    "required_crystals": ${board.required_crystals}\n`;
+    serialized += '  }';
+
+    return serialized;
+}
+
 function saveBoardToFile() {
     const originalState = board.getOriginalState();
-    
-    // Format the tiles array with proper double quotes
-    const formattedTiles = originalState.tiles.map(row => 
-        `      [${row.map(tile => `"${tile}"`).join(', ')}]`
-    ).join(',\n');
 
-    // Create the JSON string manually
-    const jsonString = `{
-  "tiles": [
-${formattedTiles}
-  ],
-  "required_crystals": ${originalState.required_crystals}
-}`;
-
+    const jsonString = formatBoard(originalState);
     const blob = new Blob([jsonString], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
 
