@@ -1,0 +1,105 @@
+Directions
+
+## Directions to play:
+
+* Use the arrow keys to navigate
+* Gather all the crystals until the exit opens, then go into the exit
+* Push blocks into holes to make both disappear
+* Don't fall into holes, or you'll die
+* One way doors are just what they look and sound like.
+* If you get stuck, you can reset the level by clicking on 'Restart'
+
+### Make your own Levels
+You can save and load level files
+* Start by saving or using one of the included levels as a starting point
+* edit the tiles arrays using the symbols below
+
+
+|Symbol|Meaning|Walkable?|
+|------|-------------|-------|
+| "." | Empty square | Yes |
+| "w" | Wall | No |
+| "p" | Player | n/a |
+| "c" | Crystal | Yes |
+| "ol" | One-way left | Yes |
+| "or" | One-way right | Yes |
+| "ou" | One-way up | Yes |
+| "ud" | One-way down | Yes |
+| "h" | Hole | No |
+| "m" | Movable Box | Yes |
+
+Specify the number of required crystals as "required_crystals" element in the `level.json`
+```json
+{
+  "tiles": [
+    ["w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w"],
+    ["w", "p", ".", ".", "m", ".", "w", "w", "w", "w", ".", ".", ".", "w"],
+    ["w", ".", "ol", ".", "or", ".", ".", "w", "w", "w", ".", ".", ".", "w"],
+    ["w", "c", "ou", "h", "od", "c", "w", ".", ".", ".", ".", ".", "od", "w"],
+    ["w", ".", "m", ".", "m", ".", ".", ".", ".", ".", ".", "w", "c", "w"],
+    ["w", ".", ".", ".", ".", "x", "w", ".", ".", ".", ".", ".", ".", "w"],
+    ["w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w"]
+  ],
+  "required_crystals": 3
+}
+```
+The board can be any rectangular dimensions, but if you make it too big, it takes long to draw and flickers.
+
+-----
+Constructs
+
+A player can only move up, down, left, or right. So, when we say 'in front of' 'behind' or 'adjacent to' it is in that context: in the space of legal moves.
+
+Protected Crystals
+A crystal (c),  behind a hole (h) or series of holes that require a movable block (m) to dispatch them
+
+example:
+```
+... "w", "w", "w" ....
+... "h",  "c", "w" ....
+... "w", "w", "w" ....
+```
+
+In the above example, the player will be required to find and supply a moveable block (m) and push it in to the hole (h) from the left (pushing it to the right) into the hole (h) so that they will be able to collect the crystal (c). This is necessary to complete the game.
+
+```
+... "w", "h", "w" ....
+... "w",  "c", "w" ....
+... "w", "w", "w" ....
+```
+In the next above example, the player will be required to find and supply a moveable block (m) and push it in to the hole (h) from the top (pushing it down) into the hole (h) so that they will be able to collect the crystal (c). This is necessary to complete the game.
+
+Sometimes a single crystal can be protected by multiple holes(h), which will require the player to have access to one movable block (m) for each of the blocking holes (h). The holes can block the player from any direction, and could be multiple layers deep.
+
+```
+... "w", "h", "w" ....
+... "w", "h", "w" ....
+... "w",  "c", "w" ....
+... "w", "w", "w" ....
+```
+In the above example, there are two holes (h) stacked on top of each other. The player would be required to push two movable blocks (m) into each of the holes.  Only then could they access the protected crystal inside. There are walls on the other sides so the player cannot access from the other directions either. Thus, the player is consigned to finding movable blocks to push. Don't let the player have any extra routes other than through the holes by which they might access the crystals, when implementing a protected crystal feature.
+
+Block Depots
+Block depots are arrangements of a large number of movable blocks, often interspersed with walls that confuse the player to walk through. The idea is that pushing one movable block obstructs nearby paths, blocking the path of other movable blocks and the player. As a result the player must extract the blocks by carefully plotting a course through a block depot so that they can both pass through it, and harvest enough movable blocks to dispatch the holes.
+
+```
+... "m", ".", "m", "." ....
+... ".", "m", ".", "m" ....
+... "m",  ".", "w", "." ....
+... ".", "m", ".", "m" ....
+```
+The above is an example of a block depot that allows the player to extract the blocks on the end, but they need to push the blocks in the middle to get through. Note that there is a wall tile on a single square that throws off the 'pattern' making the player have to pause and think about the implication of the obstacle wall tile.
+-------
+
+you will generate boards that are fun and interesting for the player to play.
+Assume the player should collect ALL of the crystals. There must be a way to complete the game:
+All crystals must be obtainable
+All exits must be reachable after the player has collected the crystals
+
+Write a python program to create the board step by step:
+
+First generate the layout of the outside of the board, include the boundary and mostly empty squares (floor)
+Then generate obstacle constructs as features to make the level more interesting
+Ensure that all puzzles are completable and that there is a valid path of motion through the board.
+Don't make it too easy.
+You can make up to 5 passes on the board, adding features each time.
