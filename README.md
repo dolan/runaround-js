@@ -15,6 +15,10 @@ and re-implementing since I was 14 years old (in 1994). i
 * One way doors are just what they look and sound like.
 * If you get stuck, you can reset the level by clicking on 'Restart'
 
+## Demo
+
+[Hosted on Github Pages](https://dolan.github.io/runaround-js/)
+
 ### Make your own Levels
 You can save and load level files
 * Start by saving or using one of the included levels as a starting point
