@@ -1,6 +1,6 @@
 const { hide } = require("yargs");
 
-function showMessage(message, duration = 3500) {
+function showMessage(message, duration = 2000) {
     const messagePanel = document.getElementById('messagePanel');
     const messageText = document.getElementById('messageText');
     messageText.textContent = message;

@@ -275,6 +275,11 @@ async function initGame(boardData) {
 }
 
 document.addEventListener('keydown', (event) => {
+    if(event.key == 'Enter') {
+        hideMessage();
+        return;
+    }
+
     const moveMap = {
         'ArrowUp': [0, -1],
         'ArrowDown': [0, 1],
