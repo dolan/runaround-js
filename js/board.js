@@ -87,3 +87,9 @@ const sampleLevel = {
     ],
     required_crystals: 3
 };
+
+
+// Export the Board class
+//if (typeof module !== 'undefined' && module.exports) {
+//    module.exports = { Board };
+//}

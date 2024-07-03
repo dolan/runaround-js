@@ -1,3 +1,5 @@
+const { hide } = require("yargs");
+
 function showMessage(message, duration = 3500) {
     const messagePanel = document.getElementById('messagePanel');
     const messageText = document.getElementById('messageText');
@@ -99,3 +101,14 @@ function killYourself() {
     showMessage('You died! The level has been reset.');
     resetGame();
 }
+
+// if (typeof module !== 'undefined' && module.exports) {
+//    module.exports = {
+//        resetGame,
+//        killYourself,
+//        loadBoardFromFile,
+//        saveBoardToFile,
+//        showMessage,
+//        hideMessage
+//    };
+//}

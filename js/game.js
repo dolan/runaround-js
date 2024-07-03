@@ -297,3 +297,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('dismissButton').addEventListener('click', hideMessage);
     loadNextLevel();
 });
+
+// if (typeof module !== 'undefined' && module.exports) {
+//    module.exports = {
+//        Player,
+//        updateViewport,
+//        drawGame,
+//        loadNextLevel
+//    };
+//}
