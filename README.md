@@ -2,7 +2,7 @@
 My "Runaround" game implemented in HTML5/JS as a test of code generation assistance tools
 
 The 'runaround' game concept is a project that I have been implementing
-and re-implementing since I was 14 years old (in 1994). i
+and re-implementing since I was 14 years old (in 1994).
 
 ![screenshot](img/screenshot-level2.png)
 
