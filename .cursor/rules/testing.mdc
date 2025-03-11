@@ -1,0 +1,21 @@
+---
+description: 
+globs: test/*.js, test/*.json
+alwaysApply: false
+---
+## Testing Guidelines
+
+- Write unit tests for all game logic components
+- Use descriptive test names following "it should..." pattern
+- Mock external dependencies appropriately
+- Test edge cases and failure scenarios
+- Maintain test coverage for critical functionality
+
+## Jest Configuration
+
+- Follow Jest best practices
+- Group related tests in describe blocks
+- Use beforeEach for test setup when appropriate
+
+@file test/jest.config.js
+@file test/game.test.js

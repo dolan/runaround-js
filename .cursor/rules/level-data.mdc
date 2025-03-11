@@ -1,0 +1,21 @@
+---
+description: 
+globs: levels/*.json
+alwaysApply: false
+---
+## Level Data Structure
+
+- Follow the established JSON schema for levels
+- Include metadata for each level (difficulty, name, etc.)
+- Validate level data before committing
+- Keep level complexity appropriate for target difficulty
+
+## Level Design Principles
+
+- Ensure levels are completable
+- Balance difficulty progression
+- Include clear objectives for each level
+
+@file levels/template.json
+@file levels/bigtemplate.json
+@file levels/level4.json 

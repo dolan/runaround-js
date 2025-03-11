@@ -1,0 +1,22 @@
+---
+description: game related javascript 
+globs: js,*.js
+alwaysApply: false
+---
+## Game Development Guidelines
+
+- Use ES6+ features appropriately
+- Implement game state management patterns
+- Separate rendering logic from game logic
+- Use event-driven architecture for user interactions
+- Document public APIs and interfaces
+
+## Code Style
+
+- Use camelCase for variables and functions
+- Follow single responsibility principle
+- Implement proper error handling for user actions
+- Optimize performance-critical sections
+
+@file js/game.js
+@file js/board.js

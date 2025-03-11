@@ -1,0 +1,19 @@
+{
+  "name": "runaround",
+  "version": "1.0.0",
+  "description": "My \"Runaround\" game implemented in HTML5/JS as a test of code generation assistance tools",
+  "main": "tests.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.24.7",
+    "@babel/preset-env": "^7.24.7",
+    "babel-jest": "^29.7.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  }
+}

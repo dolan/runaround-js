@@ -1,0 +1,21 @@
+---
+description: 
+globs: *.html, css/*.css
+alwaysApply: false
+---
+## Frontend Guidelines
+
+- Ensure responsive design for different screen sizes
+- Follow accessibility best practices
+- Optimize assets for performance
+- Use semantic HTML elements
+- Implement consistent styling across the game
+
+## CSS Organization
+
+- Use BEM naming convention for CSS classes
+- Organize styles by component
+- Minimize CSS specificity issues
+
+@file index.html
+@file css/styles.css
