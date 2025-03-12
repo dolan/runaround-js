@@ -19,7 +19,7 @@ const testLevels = {
         tiles: [
             ['w', 'w', 'w', 'w', 'w', 'w', 'w'],
             ['w', 'p', '.', 'w', 'c', 'x', 'w'],
-            ['w', '.', 'm', 'h', '.', '.', 'w'],
+            ['w', '.', 'm', 'h', 'w', '.', 'w'],
             ['w', 'w', 'w', 'w', 'w', 'w', 'w']
         ],
         required_crystals: 1
