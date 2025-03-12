@@ -119,9 +119,15 @@ class BoardAnalyzer {
      * @param {number} endX - Ending X coordinate
      * @param {number} endY - Ending Y coordinate
      * @param {boolean} [skipHoleCheck=false] - Whether to skip checking for holes with adjacent blocks
+     * @param {Set} [visitedStates=null] - Set of visited states to prevent cycles (for recursive calls)
      * @returns {boolean} True if a path exists, false otherwise
      */
-    isPathBetween(startX, startY, endX, endY, skipHoleCheck = false) {
+    isPathBetween(startX, startY, endX, endY, skipHoleCheck = false, visitedStates = null) {
+        // Initialize visitedStates if not provided (first call)
+        if (!visitedStates) {
+            visitedStates = new Set();
+        }
+        
         // Create a temporary board for path finding that considers pushable blocks
         const tempBoard = skipHoleCheck ? 
             { tiles: JSON.parse(JSON.stringify(this.board.tiles)), width: this.width, height: this.height } : 
@@ -139,7 +145,13 @@ class BoardAnalyzer {
         start.f = start.g + start.h;
         openSet.push(start);
 
-        while (openSet.length > 0) {
+        // Maximum number of iterations to prevent infinite loops
+        const maxIterations = this.width * this.height * 4;
+        let iterations = 0;
+
+        while (openSet.length > 0 && iterations < maxIterations) {
+            iterations++;
+            
             // Find node with lowest f score
             let lowestIndex = 0;
             for (let i = 0; i < openSet.length; i++) {
@@ -195,6 +207,67 @@ class BoardAnalyzer {
                     openSet.push(neighbor);
                 }
             }
+            
+            // Check if we need to consider pushing blocks to create a path
+            if (!skipHoleCheck && openSet.length === 0) {
+                // Look for movable blocks that could be pushed to create a path
+                const movableBlocks = this.findMovableBlocksNearPosition(current.x, current.y);
+                
+                for (const block of movableBlocks) {
+                    // Create a unique state identifier to prevent cycles
+                    const stateId = `${current.x},${current.y},${block.x},${block.y}`;
+                    
+                    // Skip if we've already tried this state
+                    if (visitedStates.has(stateId)) {
+                        continue;
+                    }
+                    
+                    // Mark this state as visited
+                    visitedStates.add(stateId);
+                    
+                    // Try pushing the block in each direction
+                    const directions = [
+                        { dx: 0, dy: -1 }, // Up
+                        { dx: 1, dy: 0 },  // Right
+                        { dx: 0, dy: 1 },  // Down
+                        { dx: -1, dy: 0 }  // Left
+                    ];
+                    
+                    for (const dir of directions) {
+                        const pushToX = block.x + dir.dx;
+                        const pushToY = block.y + dir.dy;
+                        
+                        // Check if we can push the block in this direction
+                        if (this.canPushBlockTo(block, pushToX, pushToY)) {
+                            // Create a new board state with the block pushed
+                            const newTempBoard = {
+                                tiles: JSON.parse(JSON.stringify(tempBoard.tiles)),
+                                width: this.width,
+                                height: this.height
+                            };
+                            
+                            // Move the block
+                            newTempBoard.tiles[block.y][block.x] = '.';
+                            newTempBoard.tiles[pushToY][pushToX] = 'm';
+                            
+                            // Create a new analyzer with this board state
+                            const newBoard = new Board({
+                                tiles: newTempBoard.tiles,
+                                required_crystals: this.board.requiredCrystals
+                            });
+                            newBoard.startX = current.x;
+                            newBoard.startY = current.y;
+                            
+                            const newAnalyzer = new BoardAnalyzer(newBoard);
+                            
+                            // Recursively check if we can now reach the destination
+                            if (newAnalyzer.isPathBetween(current.x, current.y, endX, endY, false, visitedStates)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
         }
         
         // No path found
@@ -223,9 +296,80 @@ class BoardAnalyzer {
             }
         }
         
-        // Mark holes with adjacent movable blocks as walkable
+        // Find all movable blocks
+        const blocks = [];
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                if (tempBoardData.tiles[y][x] === 'm') {
+                    blocks.push({ x, y });
+                }
+            }
+        }
+        
+        // Mark holes that can potentially be filled as walkable
         for (const hole of holes) {
+            // Check if there's a block that can be pushed to this hole
+            let canBeFilled = false;
+            
+            // First check for adjacent blocks that can be directly pushed into the hole
             if (this.hasAdjacentMovableBlockSimple(hole.x, hole.y)) {
+                canBeFilled = true;
+            } else {
+                // Check if any block on the board could potentially be pushed to this hole
+                for (const block of blocks) {
+                    // Skip blocks that are too far away (Manhattan distance > 5)
+                    const distance = Math.abs(block.x - hole.x) + Math.abs(block.y - hole.y);
+                    if (distance > 5) continue;
+                    
+                    // Check if this block could potentially be pushed to the hole
+                    // This is a simplified check to avoid expensive computations
+                    const directions = [
+                        { dx: 0, dy: -1 }, // Up
+                        { dx: 1, dy: 0 },  // Right
+                        { dx: 0, dy: 1 },  // Down
+                        { dx: -1, dy: 0 }  // Left
+                    ];
+                    
+                    // Check if there's a clear path from the block to the hole
+                    // in one of the four cardinal directions
+                    for (const dir of directions) {
+                        let pathClear = true;
+                        let currentX = block.x;
+                        let currentY = block.y;
+                        
+                        while (currentX !== hole.x || currentY !== hole.y) {
+                            // Move one step in the direction
+                            currentX += dir.dx;
+                            currentY += dir.dy;
+                            
+                            // If we've gone out of bounds or hit a wall, path is not clear
+                            if (currentX < 0 || currentX >= this.width || currentY < 0 || currentY >= this.height ||
+                                tempBoardData.tiles[currentY][currentX] === 'w') {
+                                pathClear = false;
+                                break;
+                            }
+                            
+                            // If we've hit another block or a different hole, path is not clear
+                            if ((tempBoardData.tiles[currentY][currentX] === 'm' && 
+                                 (currentX !== hole.x || currentY !== hole.y)) ||
+                                (tempBoardData.tiles[currentY][currentX] === 'h' && 
+                                 (currentX !== hole.x || currentY !== hole.y))) {
+                                pathClear = false;
+                                break;
+                            }
+                        }
+                        
+                        if (pathClear) {
+                            canBeFilled = true;
+                            break;
+                        }
+                    }
+                    
+                    if (canBeFilled) break;
+                }
+            }
+            
+            if (canBeFilled) {
                 // Mark this hole as potentially walkable
                 tempBoardData.tiles[hole.y][hole.x] = 'h_walkable';
                 console.log(`Marked hole at (${hole.x}, ${hole.y}) as walkable`);
@@ -293,8 +437,28 @@ class BoardAnalyzer {
             const newX = x + dir.dx;
             const newY = y + dir.dy;
             
+            // Check if the neighbor is directly walkable
             if (this.isWalkableWithPushableBlocks(newX, newY, tempBoard)) {
                 neighbors.push({ x: newX, y: newY });
+                continue;
+            }
+            
+            // If not directly walkable, check if it's a movable block that can be pushed
+            if (newX >= 0 && newX < this.width && newY >= 0 && newY < this.height &&
+                tempBoard.tiles[newY][newX] === 'm') {
+                
+                // Calculate where the block would be pushed to
+                const pushToX = newX + dir.dx;
+                const pushToY = newY + dir.dy;
+                
+                // Check if the block can be pushed (target space is empty or a hole)
+                if (pushToX >= 0 && pushToX < this.width && pushToY >= 0 && pushToY < this.height) {
+                    const targetTile = tempBoard.tiles[pushToY][pushToX];
+                    if (targetTile === '.' || targetTile === 'h' || targetTile === 'h_walkable') {
+                        // This block can be pushed, so the space is walkable
+                        neighbors.push({ x: newX, y: newY, isPushable: true });
+                    }
+                }
             }
         }
         
@@ -315,7 +479,6 @@ class BoardAnalyzer {
         
         const tile = tempBoard.tiles[y][x];
         return tile === '.' || tile === 'c' || tile === 'x' || 
-               tile === 'm' || // Movable blocks are walkable in path finding
                tile === 'ol' || tile === 'or' || tile === 'ou' || tile === 'od' || // One-way doors are walkable
                tile === 'h_walkable'; // Holes with adjacent movable blocks are walkable
     }
@@ -713,6 +876,29 @@ class BoardAnalyzer {
     }
 
     /**
+     * Determines if a block is reachable by the player, considering the possibility
+     * of pushing other blocks or filling holes to create a path
+     * @param {Object} playerStart - Player starting position
+     * @param {Object} block - Block position to check
+     * @returns {boolean} True if the block is reachable, false otherwise
+     */
+    isBlockReachable(playerStart, block) {
+        // First, try the simple path check
+        if (this.isPathBetweenSimple(playerStart.x, playerStart.y, block.x, block.y)) {
+            return true;
+        }
+        
+        // If simple path doesn't work, try a more complex approach that considers
+        // pushing blocks and filling holes
+        
+        // Create a temporary board for path finding
+        const tempBoard = this.createTempBoardForPathFinding();
+        
+        // Use the more sophisticated isPathBetween method that considers pushable blocks
+        return this.isPathBetween(playerStart.x, playerStart.y, block.x, block.y, false);
+    }
+
+    /**
      * Provides a detailed analysis of the board
      * @returns {Object} Detailed analysis of the board
      */
@@ -757,9 +943,9 @@ class BoardAnalyzer {
             }
         }
 
-        // Analyze blocks
+        // Analyze blocks - use the improved isBlockReachable method
         for (const block of elements.movableBlocks) {
-            const reachable = this.isPathBetweenSimple(elements.playerStart.x, elements.playerStart.y, block.x, block.y);
+            const reachable = this.isBlockReachable(elements.playerStart, block);
             if (reachable) {
                 analysis.blockAnalysis.reachableBlocks.push(block);
             } else {
@@ -880,6 +1066,54 @@ class BoardAnalyzer {
         return tile === '.' || tile === 'c' || tile === 'x' || 
                tile === 'm' || // Movable blocks are walkable in path finding
                tile === 'ol' || tile === 'or' || tile === 'ou' || tile === 'od'; // One-way doors are walkable
+    }
+
+    /**
+     * Finds movable blocks near a position that could potentially be pushed
+     * @param {number} x - X coordinate
+     * @param {number} y - Y coordinate
+     * @returns {Array} Array of movable blocks near the position
+     */
+    findMovableBlocksNearPosition(x, y) {
+        const blocks = [];
+        const directions = [
+            { dx: 0, dy: -1 }, // Up
+            { dx: 1, dy: 0 },  // Right
+            { dx: 0, dy: 1 },  // Down
+            { dx: -1, dy: 0 }  // Left
+        ];
+        
+        for (const dir of directions) {
+            const blockX = x + dir.dx;
+            const blockY = y + dir.dy;
+            
+            // Check if there's a movable block adjacent to the position
+            if (blockX >= 0 && blockX < this.width && blockY >= 0 && blockY < this.height &&
+                this.board.getTile(blockX, blockY) === 'm') {
+                
+                blocks.push({ x: blockX, y: blockY });
+            }
+        }
+        
+        return blocks;
+    }
+    
+    /**
+     * Checks if a block can be pushed to a specific position
+     * @param {Object} block - Block position
+     * @param {number} targetX - Target X coordinate
+     * @param {number} targetY - Target Y coordinate
+     * @returns {boolean} True if the block can be pushed to the target position
+     */
+    canPushBlockTo(block, targetX, targetY) {
+        // Check if target position is valid
+        if (targetX < 0 || targetX >= this.width || targetY < 0 || targetY >= this.height) {
+            return false;
+        }
+        
+        // Check if target position is empty or a hole (which can be filled)
+        const targetTile = this.board.getTile(targetX, targetY);
+        return targetTile === '.' || targetTile === 'h';
     }
 }
 
