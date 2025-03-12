@@ -93,3 +93,4 @@ dist/
 
 # node-inspector nodejs debugger
 .node-inspector
+.aider*

@@ -95,6 +95,7 @@ class BoardAnalyzer {
 
     /**
      * Determines if there is a walkable path between two points using A* algorithm
+     * This version considers the possibility of pushing blocks into holes
      * @param {number} startX - Starting X coordinate
      * @param {number} startY - Starting Y coordinate
      * @param {number} endX - Ending X coordinate
@@ -102,6 +103,9 @@ class BoardAnalyzer {
      * @returns {boolean} True if a path exists, false otherwise
      */
     isPathBetween(startX, startY, endX, endY) {
+        // Create a temporary board for path finding that considers pushable blocks
+        const tempBoard = this.createTempBoardForPathFinding();
+        
         // A* algorithm implementation
         const openSet = [];
         const closedSet = new Set();
@@ -135,7 +139,7 @@ class BoardAnalyzer {
             closedSet.add(`${current.x},${current.y}`);
             
             // Check all neighbors
-            const neighbors = this.getWalkableNeighbors(current.x, current.y);
+            const neighbors = this.getWalkableNeighborsWithPushableBlocks(current.x, current.y, tempBoard);
             
             for (const neighbor of neighbors) {
                 // Skip if already evaluated
@@ -175,12 +179,38 @@ class BoardAnalyzer {
     }
 
     /**
-     * Gets all walkable neighbors of a tile
+     * Creates a temporary board for path finding that considers pushable blocks
+     * @returns {Object} Temporary board data
+     */
+    createTempBoardForPathFinding() {
+        // Create a copy of the board
+        const tempBoardData = {
+            tiles: JSON.parse(JSON.stringify(this.board.tiles)),
+            width: this.width,
+            height: this.height
+        };
+        
+        // Mark holes with adjacent movable blocks as walkable
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                if (tempBoardData.tiles[y][x] === 'h' && this.hasAdjacentMovableBlock(x, y)) {
+                    // Mark this hole as potentially walkable
+                    tempBoardData.tiles[y][x] = 'h_walkable';
+                }
+            }
+        }
+        
+        return tempBoardData;
+    }
+
+    /**
+     * Gets all walkable neighbors of a tile, considering pushable blocks
      * @param {number} x - X coordinate
      * @param {number} y - Y coordinate
+     * @param {Object} tempBoard - Temporary board data
      * @returns {Array} Array of walkable neighbor coordinates
      */
-    getWalkableNeighbors(x, y) {
+    getWalkableNeighborsWithPushableBlocks(x, y, tempBoard) {
         const neighbors = [];
         const directions = [
             { dx: 0, dy: -1 }, // Up
@@ -193,7 +223,7 @@ class BoardAnalyzer {
             const newX = x + dir.dx;
             const newY = y + dir.dy;
             
-            if (this.isWalkable(newX, newY)) {
+            if (this.isWalkableWithPushableBlocks(newX, newY, tempBoard)) {
                 neighbors.push({ x: newX, y: newY });
             }
         }
@@ -202,20 +232,22 @@ class BoardAnalyzer {
     }
 
     /**
-     * Determines if a tile is walkable
+     * Determines if a tile is walkable, considering pushable blocks
      * @param {number} x - X coordinate
      * @param {number} y - Y coordinate
+     * @param {Object} tempBoard - Temporary board data
      * @returns {boolean} True if walkable, false otherwise
      */
-    isWalkable(x, y) {
+    isWalkableWithPushableBlocks(x, y, tempBoard) {
         if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
             return false;
         }
         
-        const tile = this.board.getTile(x, y);
+        const tile = tempBoard.tiles[y][x];
         return tile === '.' || tile === 'c' || tile === 'x' || 
                tile === 'm' || // Movable blocks are walkable in path finding
-               tile === 'ol' || tile === 'or' || tile === 'ou' || tile === 'od'; // One-way doors are walkable
+               tile === 'ol' || tile === 'or' || tile === 'ou' || tile === 'od' || // One-way doors are walkable
+               tile === 'h_walkable'; // Holes with adjacent movable blocks are walkable
     }
 
     /**
@@ -232,26 +264,78 @@ class BoardAnalyzer {
         
         // Check each hole to see if it blocks a path to a crystal or exit
         for (const hole of elements.holes) {
+            // First, check if there's a movable block adjacent to the hole
+            // If so, this hole might be fillable and not critical
+            const adjacentBlock = this.hasAdjacentMovableBlock(hole.x, hole.y);
+            if (adjacentBlock) {
+                // Skip this hole as it can potentially be filled by pushing the adjacent block
+                continue;
+            }
+            
             // Check if hole blocks path to any crystal
+            let blocksPath = false;
             for (const crystal of elements.crystals) {
+                // Check if there's no path to the crystal with the current board
+                // but there would be a path if all holes were filled
                 if (!this.isPathBetween(elements.playerStart.x, elements.playerStart.y, crystal.x, crystal.y) &&
                     tempAnalyzer.isPathBetween(elements.playerStart.x, elements.playerStart.y, crystal.x, crystal.y)) {
                     criticalHoles.push(hole);
+                    blocksPath = true;
                     break;
                 }
+            }
+            
+            // If the hole already blocks a path to a crystal, no need to check the exit
+            if (blocksPath) {
+                continue;
             }
             
             // Check if hole blocks path to exit
             if (elements.exit && 
                 !this.isPathBetween(elements.playerStart.x, elements.playerStart.y, elements.exit.x, elements.exit.y) &&
                 tempAnalyzer.isPathBetween(elements.playerStart.x, elements.playerStart.y, elements.exit.x, elements.exit.y)) {
-                if (!criticalHoles.some(h => h.x === hole.x && h.y === hole.y)) {
-                    criticalHoles.push(hole);
-                }
+                criticalHoles.push(hole);
             }
         }
         
         return criticalHoles;
+    }
+    
+    /**
+     * Checks if a hole has an adjacent movable block that could be pushed into it
+     * @param {number} holeX - X coordinate of the hole
+     * @param {number} holeY - Y coordinate of the hole
+     * @returns {boolean} True if there's an adjacent movable block, false otherwise
+     */
+    hasAdjacentMovableBlock(holeX, holeY) {
+        const directions = [
+            { dx: 0, dy: -1 }, // Up
+            { dx: 1, dy: 0 },  // Right
+            { dx: 0, dy: 1 },  // Down
+            { dx: -1, dy: 0 }  // Left
+        ];
+        
+        for (const dir of directions) {
+            const blockX = holeX + dir.dx;
+            const blockY = holeY + dir.dy;
+            
+            // Check if there's a movable block adjacent to the hole
+            if (blockX >= 0 && blockX < this.width && blockY >= 0 && blockY < this.height &&
+                this.board.getTile(blockX, blockY) === 'm') {
+                
+                // Check if the player can reach the position to push the block
+                const playerX = blockX + dir.dx;
+                const playerY = blockY + dir.dy;
+                
+                if (playerX >= 0 && playerX < this.width && playerY >= 0 && playerY < this.height &&
+                    this.isWalkable(playerX, playerY)) {
+                    // Player can reach the position to push the block into the hole
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
 
     /**
@@ -469,6 +553,50 @@ class BoardAnalyzer {
         }
 
         return suggestions;
+    }
+
+    /**
+     * Gets all walkable neighbors of a tile
+     * @param {number} x - X coordinate
+     * @param {number} y - Y coordinate
+     * @returns {Array} Array of walkable neighbor coordinates
+     */
+    getWalkableNeighbors(x, y) {
+        const neighbors = [];
+        const directions = [
+            { dx: 0, dy: -1 }, // Up
+            { dx: 1, dy: 0 },  // Right
+            { dx: 0, dy: 1 },  // Down
+            { dx: -1, dy: 0 }  // Left
+        ];
+        
+        for (const dir of directions) {
+            const newX = x + dir.dx;
+            const newY = y + dir.dy;
+            
+            if (this.isWalkable(newX, newY)) {
+                neighbors.push({ x: newX, y: newY });
+            }
+        }
+        
+        return neighbors;
+    }
+
+    /**
+     * Determines if a tile is walkable
+     * @param {number} x - X coordinate
+     * @param {number} y - Y coordinate
+     * @returns {boolean} True if walkable, false otherwise
+     */
+    isWalkable(x, y) {
+        if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+            return false;
+        }
+        
+        const tile = this.board.getTile(x, y);
+        return tile === '.' || tile === 'c' || tile === 'x' || 
+               tile === 'm' || // Movable blocks are walkable in path finding
+               tile === 'ol' || tile === 'or' || tile === 'ou' || tile === 'od'; // One-way doors are walkable
     }
 }
 

@@ -59,6 +59,30 @@ const testLevels = {
             ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w']
         ],
         required_crystals: 1
+    },
+    
+    // A level with a box next to a hole that blocks a path
+    boxNextToHole: {
+        tiles: [
+            ['w', 'w', 'w', 'w', 'w', 'w', 'w'],
+            ['w', 'p', '.', 'h', '.', 'c', 'w'],
+            ['w', '.', 'm', '.', '.', '.', 'w'],
+            ['w', '.', '.', '.', '.', 'x', 'w'],
+            ['w', 'w', 'w', 'w', 'w', 'w', 'w']
+        ],
+        required_crystals: 1
+    },
+    
+    // A level with a box next to a hole that blocks a path to a crystal
+    boxNextToHoleCrystal: {
+        tiles: [
+            ['w', 'w', 'w', 'w', 'w', 'w', 'w'],
+            ['w', 'p', '.', '.', '.', '.', 'w'],
+            ['w', '.', '.', 'h', 'w', 'c', 'w'],
+            ['w', '.', 'm', '.', '.', 'x', 'w'],
+            ['w', 'w', 'w', 'w', 'w', 'w', 'w']
+        ],
+        required_crystals: 1
     }
 };
 
