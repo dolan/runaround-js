@@ -1,4 +1,4 @@
-class Board {
+export class Board {
     constructor(data) {
         if (!data || !data.tiles || !Array.isArray(data.tiles) || data.tiles.length === 0) {
             throw new Error("Invalid board data");
@@ -75,7 +75,7 @@ class Board {
 }
 
 // Sample level data
-const sampleLevel = {
+export const sampleLevel = {
     tiles: [
         ['w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w', 'w'],
         ['w', 'p', '.', '.', 'm', '.', '.', '.', '.', '.', '.', 'w', 'w', 'w', 'w', 'w', 'w', 'w', '.', '.', '.', 'w'],
@@ -87,9 +87,3 @@ const sampleLevel = {
     ],
     required_crystals: 3
 };
-
-
-// Export the Board class
-//if (typeof module !== 'undefined' && module.exports) {
-//    module.exports = { Board };
-//}

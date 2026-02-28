@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Board Analyzer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .upload-section, .template-section {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 20px;
+        }
+        .results-section {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 20px;
+            display: none;
+        }
+        .json-example {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .button-secondary {
+            background-color: #2196F3;
+        }
+        .button-secondary:hover {
+            background-color: #0b7dda;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+        #boardDisplay {
+            font-family: monospace;
+            margin: 20px 0;
+            white-space: pre;
+        }
+        #analysisResults, #errorMessage {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .visualboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 30px);
+            gap: 1px;
+            margin: 20px 0;
+        }
+        .cell {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .wall { background-color: #555; color: white; }
+        .empty { background-color: #eee; }
+        .player { background-color: #3498db; color: white; }
+        .crystal { background-color: #f1c40f; }
+        .hole { background-color: #34495e; color: white; }
+        .movable { background-color: #e67e22; color: white; }
+        .exit { background-color: #2ecc71; color: white; }
+        .oneway { background-color: #9b59b6; color: white; }
+        #visualBoard {
+            margin-top: 20px;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Custom Board Analyzer</h1>
+        <p>Upload your custom board definition (JSON) file to analyze if it's playable.</p>
+        
+        <div class="template-section">
+            <h2>Generate Template</h2>
+            <p>Don't have a board file? Generate a template to start with:</p>
+            <div class="template-controls">
+                <label for="templateWidth">Width:</label>
+                <input type="number" id="templateWidth" min="3" max="20" value="5">
+                
+                <label for="templateHeight">Height:</label>
+                <input type="number" id="templateHeight" min="3" max="20" value="5">
+                
+                <label for="templateCrystals">Required Crystals:</label>
+                <input type="number" id="templateCrystals" min="0" max="10" value="1">
+                
+                <button id="generateTemplateBtn" class="button-secondary">Generate Template</button>
+                <button id="downloadTemplateBtn" class="button-secondary" disabled>Download Template</button>
+            </div>
+            
+            <div class="legend">
+                <h3>Board Legend:</h3>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-color wall">█</div>
+                        <span>Wall (w)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color empty">·</div>
+                        <span>Empty (.)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color player">P</div>
+                        <span>Player (p)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color crystal">✦</div>
+                        <span>Crystal (c)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color movable">▣</div>
+                        <span>Movable (m)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color hole">◯</div>
+                        <span>Hole (h)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color exit">▶</div>
+                        <span>Exit (x)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color oneway">←→↑↓</div>
+                        <span>One-way (ol/or/ou/od)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="upload-section">
+            <h2>Upload Board Definition</h2>
+            <p>Select a JSON file containing your board definition:</p>
+            <input type="file" id="boardFile" accept=".json">
+            <button id="analyzeBtn">Analyze Board</button>
+            
+            <div class="json-example">
+                <p>Example JSON format:</p>
+<pre>{
+    "tiles": [
+        ["w", "w", "w", "w", "w"],
+        ["w", "p", ".", "c", "w"],
+        ["w", ".", "m", ".", "w"],
+        ["w", ".", "h", "x", "w"],
+        ["w", "w", "w", "w", "w"]
+    ],
+    "required_crystals": 1
+}</pre>
+            </div>
+        </div>
+        
+        <div id="resultsSection" class="results-section">
+            <h2>Analysis Results</h2>
+            
+            <h3>Board Visualization</h3>
+            <div id="visualBoard"></div>
+            
+            <h3>Playability Analysis</h3>
+            <div id="analysisResults"></div>
+            
+            <h3>Suggested Fixes</h3>
+            <div id="suggestedFixes"></div>
+            
+            <h3>Detailed Analysis</h3>
+            <div id="detailedAnalysis"></div>
+            
+            <div id="errorMessage" style="display: none; color: red;"></div>
+        </div>
+    </div>
+
+    <!-- Load the required scripts -->
+    <script type="module">
+        import { Board } from '/src/core/Board.js';
+        import { BoardAnalyzer } from '/src/core/BoardAnalyzer.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const boardFileInput = document.getElementById('boardFile');
+            const resultsSection = document.getElementById('resultsSection');
+            const visualBoardDiv = document.getElementById('visualBoard');
+            const analysisResultsDiv = document.getElementById('analysisResults');
+            const suggestedFixesDiv = document.getElementById('suggestedFixes');
+            const detailedAnalysisDiv = document.getElementById('detailedAnalysis');
+            const errorMessageDiv = document.getElementById('errorMessage');
+            
+            // Template generation elements
+            const generateTemplateBtn = document.getElementById('generateTemplateBtn');
+            const downloadTemplateBtn = document.getElementById('downloadTemplateBtn');
+            const templateWidthInput = document.getElementById('templateWidth');
+            const templateHeightInput = document.getElementById('templateHeight');
+            const templateCrystalsInput = document.getElementById('templateCrystals');
+            
+            // Current template data
+            let currentTemplate = null;
+
+            // Handle file upload and board analysis
+            analyzeBtn.addEventListener('click', () => {
+                const file = boardFileInput.files[0];
+                
+                if (!file) {
+                    showError('Please select a JSON file.');
+                    return;
+                }
+
+                // Clear previous results
+                visualBoardDiv.innerHTML = '';
+                analysisResultsDiv.innerHTML = '';
+                suggestedFixesDiv.innerHTML = '';
+                detailedAnalysisDiv.innerHTML = '';
+                errorMessageDiv.style.display = 'none';
+
+                // Read the file
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        // Parse the JSON data
+                        const boardData = JSON.parse(event.target.result);
+
+                        // Validate the required structure
+                        if (!boardData.tiles || !Array.isArray(boardData.tiles)) {
+                            throw new Error('Invalid board format: missing or invalid tiles array');
+                        }
+
+                        // Create Board instance
+                        const board = new Board(boardData);
+                        
+                        // Create BoardAnalyzer instance
+                        const analyzer = new BoardAnalyzer(board);
+
+                        // Visualize the board
+                        visualizeBoard(board);
+
+                        // Analyze the board
+                        const playabilityResult = analyzer.isPlayable();
+                        const suggestedFixes = analyzer.suggestFixes();
+                        const detailedAnalysis = analyzer.analyzeBoard();
+
+                        // Display analysis results
+                        analysisResultsDiv.textContent = JSON.stringify(playabilityResult, null, 2);
+                        
+                        // Display suggested fixes
+                        suggestedFixesDiv.innerHTML = '';
+                        suggestedFixes.forEach(fix => {
+                            const p = document.createElement('p');
+                            p.textContent = fix;
+                            suggestedFixesDiv.appendChild(p);
+                        });
+                        
+                        // Display detailed analysis
+                        detailedAnalysisDiv.textContent = JSON.stringify(detailedAnalysis, null, 2);
+                        
+                        // Show results section
+                        resultsSection.style.display = 'block';
+                    } catch (error) {
+                        console.error('Error analyzing board:', error);
+                        showError(`Error analyzing board: ${error.message}`);
+                    }
+                };
+                
+                reader.onerror = () => {
+                    showError('Error reading the file.');
+                };
+                
+                reader.readAsText(file);
+            });
+            
+            // Generate template board
+            generateTemplateBtn.addEventListener('click', () => {
+                const width = parseInt(templateWidthInput.value);
+                const height = parseInt(templateHeightInput.value);
+                const requiredCrystals = parseInt(templateCrystalsInput.value);
+                
+                if (isNaN(width) || width < 3 || width > 20 || 
+                    isNaN(height) || height < 3 || height > 20 || 
+                    isNaN(requiredCrystals) || requiredCrystals < 0) {
+                    showError('Please enter valid dimensions and crystal count.');
+                    return;
+                }
+                
+                // Generate a simple template
+                currentTemplate = generateBoardTemplate(width, height, requiredCrystals);
+                
+                // Enable download button
+                downloadTemplateBtn.disabled = false;
+                
+                // Create a board instance and visualize it
+                try {
+                    const board = new Board(currentTemplate);
+                    
+                    // Clear previous results
+                    visualBoardDiv.innerHTML = '';
+                    analysisResultsDiv.innerHTML = '';
+                    suggestedFixesDiv.innerHTML = '';
+                    detailedAnalysisDiv.innerHTML = '';
+                    errorMessageDiv.style.display = 'none';
+                    
+                    // Visualize the template board
+                    visualizeBoard(board);
+                    
+                    // Show results section
+                    resultsSection.style.display = 'block';
+                    
+                    // Show a message in the analysis results
+                    analysisResultsDiv.textContent = 'Template generated! You can download this template, modify it, and then upload it back for analysis.';
+                } catch (error) {
+                    console.error('Error generating template:', error);
+                    showError(`Error generating template: ${error.message}`);
+                }
+            });
+            
+            // Download template board
+            downloadTemplateBtn.addEventListener('click', () => {
+                if (!currentTemplate) {
+                    showError('No template has been generated yet.');
+                    return;
+                }
+                
+                // Convert template to JSON string
+                const templateJson = JSON.stringify(currentTemplate, null, 4);
+                
+                // Create a blob with the JSON data
+                const blob = new Blob([templateJson], { type: 'application/json' });
+                
+                // Create a download link
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'board_template.json';
+                
+                // Trigger the download
+                document.body.appendChild(a);
+                a.click();
+                
+                // Clean up
+                document.body.removeChild(a);
+                URL.revokeObjectURL(a.href);
+            });
+
+            // Function to generate a simple board template
+            function generateBoardTemplate(width, height, requiredCrystals) {
+                const tiles = [];
+                
+                // Create an empty board with walls around the edges
+                for (let y = 0; y < height; y++) {
+                    const row = [];
+                    for (let x = 0; x < width; x++) {
+                        if (y === 0 || y === height - 1 || x === 0 || x === width - 1) {
+                            // Add walls around the edges
+                            row.push('w');
+                        } else {
+                            // Fill the rest with empty spaces
+                            row.push('.');
+                        }
+                    }
+                    tiles.push(row);
+                }
+                
+                // Add a player start position in the top-left corner (inside the walls)
+                tiles[1][1] = 'p';
+                
+                // Add crystals (one more than required to give some flexibility)
+                const totalCrystals = Math.min(requiredCrystals + 1, Math.floor((width - 2) * (height - 2) / 4));
+                let crystalsAdded = 0;
+                
+                // Try to place crystals randomly
+                for (let attempts = 0; attempts < 50 && crystalsAdded < totalCrystals; attempts++) {
+                    const x = Math.floor(Math.random() * (width - 2)) + 1;
+                    const y = Math.floor(Math.random() * (height - 2)) + 1;
+                    
+                    // Don't place on player start
+                    if (tiles[y][x] === '.') {
+                        tiles[y][x] = 'c';
+                        crystalsAdded++;
+                    }
+                }
+                
+                // Add an exit
+                let exitPlaced = false;
+                for (let attempts = 0; attempts < 50 && !exitPlaced; attempts++) {
+                    const x = Math.floor(Math.random() * (width - 2)) + 1;
+                    const y = Math.floor(Math.random() * (height - 2)) + 1;
+                    
+                    if (tiles[y][x] === '.') {
+                        tiles[y][x] = 'x';
+                        exitPlaced = true;
+                    }
+                }
+                
+                // Add a movable block and a hole
+                let blockPlaced = false;
+                for (let attempts = 0; attempts < 50 && !blockPlaced; attempts++) {
+                    const x = Math.floor(Math.random() * (width - 2)) + 1;
+                    const y = Math.floor(Math.random() * (height - 2)) + 1;
+                    
+                    if (tiles[y][x] === '.') {
+                        tiles[y][x] = 'm';
+                        blockPlaced = true;
+                    }
+                }
+                
+                let holePlaced = false;
+                for (let attempts = 0; attempts < 50 && !holePlaced; attempts++) {
+                    const x = Math.floor(Math.random() * (width - 2)) + 1;
+                    const y = Math.floor(Math.random() * (height - 2)) + 1;
+                    
+                    if (tiles[y][x] === '.') {
+                        tiles[y][x] = 'h';
+                        holePlaced = true;
+                    }
+                }
+                
+                return {
+                    tiles: tiles,
+                    required_crystals: requiredCrystals
+                };
+            }
+
+            // Function to visualize the board
+            function visualizeBoard(board) {
+                visualBoardDiv.innerHTML = '';
+                
+                // Create a CSS grid to display the board
+                const visualBoard = document.createElement('div');
+                visualBoard.className = 'visualboard';
+                
+                for (let y = 0; y < board.height; y++) {
+                    for (let x = 0; x < board.width; x++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        
+                        const tile = board.getTile(x, y);
+                        
+                        // Style the cell based on tile type
+                        switch (tile) {
+                            case 'w':
+                                cell.className += ' wall';
+                                cell.textContent = '█';
+                                break;
+                            case '.':
+                                cell.className += ' empty';
+                                cell.textContent = '·';
+                                break;
+                            case 'c':
+                                cell.className += ' crystal';
+                                cell.textContent = '✦';
+                                break;
+                            case 'm':
+                                cell.className += ' movable';
+                                cell.textContent = '▣';
+                                break;
+                            case 'h':
+                                cell.className += ' hole';
+                                cell.textContent = '◯';
+                                break;
+                            case 'x':
+                                cell.className += ' exit';
+                                cell.textContent = '▶';
+                                break;
+                            case 'ol':
+                            case 'or':
+                            case 'ou':
+                            case 'od':
+                                cell.className += ' oneway';
+                                if (tile === 'ol') cell.textContent = '←';
+                                if (tile === 'or') cell.textContent = '→';
+                                if (tile === 'ou') cell.textContent = '↑';
+                                if (tile === 'od') cell.textContent = '↓';
+                                break;
+                            default:
+                                cell.textContent = tile;
+                        }
+                        
+                        // Mark player start position
+                        if (x === board.startX && y === board.startY) {
+                            const startMarker = document.createElement('div');
+                            startMarker.className = 'cell player';
+                            startMarker.textContent = 'P';
+                            startMarker.style.position = 'absolute';
+                            startMarker.style.width = '20px';
+                            startMarker.style.height = '20px';
+                            startMarker.style.borderRadius = '50%';
+                            cell.appendChild(startMarker);
+                        }
+                        
+                        visualBoard.appendChild(cell);
+                    }
+                }
+                
+                visualBoardDiv.appendChild(visualBoard);
+            }
+
+            // Function to show error messages
+            function showError(message) {
+                errorMessageDiv.textContent = message;
+                errorMessageDiv.style.display = 'block';
+                resultsSection.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html> 
