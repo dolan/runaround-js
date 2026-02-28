@@ -124,6 +124,35 @@ describe('Board', () => {
         expect(original.required_crystals).toBe(1);
     });
 
+    test('getOriginalState includes entities when present', () => {
+        const entities = [
+            { type: 'npc', id: 'guard', x: 1, y: 0 }
+        ];
+        const board = new Board({
+            tiles: [
+                ['w', '.', 'w'],
+                ['w', 'p', 'w'],
+                ['w', 'w', 'w']
+            ],
+            required_crystals: 0,
+            entities
+        });
+        const state = board.getOriginalState();
+        expect(state.entities).toEqual(entities);
+    });
+
+    test('getOriginalState omits entities when not present', () => {
+        const board = new Board({
+            tiles: [
+                ['w', '.', 'w'],
+                ['w', 'p', 'w'],
+                ['w', 'w', 'w']
+            ]
+        });
+        const state = board.getOriginalState();
+        expect(state.entities).toBeUndefined();
+    });
+
     test('sampleLevel is exported and valid', () => {
         expect(sampleLevel).toBeDefined();
         expect(sampleLevel.tiles).toBeDefined();

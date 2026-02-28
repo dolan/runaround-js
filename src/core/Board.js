@@ -8,6 +8,7 @@ export class Board {
         this.width = this.tiles[0].length;
         this.height = this.tiles.length;
         this.requiredCrystals = data.required_crystals || 0;
+        this.originalEntities = data.entities || null;
         this.startX = 0;
         this.startY = 0;
         this.findStartPosition();
@@ -48,10 +49,14 @@ export class Board {
     }
 
     getOriginalState() {
-        return {
+        const state = {
             tiles: this.originalTiles,
             required_crystals: this.requiredCrystals
         };
+        if (this.originalEntities) {
+            state.entities = this.originalEntities;
+        }
+        return state;
     }
 
     getTile(x, y) {

@@ -319,16 +319,20 @@ document.addEventListener('keydown', (event) => {
     if (dialogueSystem.active) {
         switch (event.key) {
             case 'ArrowUp':
+                event.preventDefault();
                 dialogueSystem.selectPrevious();
                 break;
             case 'ArrowDown':
+                event.preventDefault();
                 dialogueSystem.selectNext();
                 break;
             case 'Enter':
             case ' ':
+                event.preventDefault();
                 dialogueSystem.advance();
                 break;
             case 'Escape':
+                event.preventDefault();
                 dialogueSystem.close();
                 break;
         }
