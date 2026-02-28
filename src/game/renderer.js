@@ -1,4 +1,4 @@
-import { TILE_SIZE, gameColors, glyphs } from './constants.js';
+import { TILE_SIZE, gameColors, glyphs, entityColors } from './constants.js';
 
 function getTileColor(tile) {
     const colorMap = {
@@ -71,7 +71,72 @@ function drawPlayer(ctx, player, viewportX, viewportY) {
     ctx.stroke();
 }
 
-export function drawGame(ctx, board, player, viewportX, viewportY) {
+/**
+ * Draw all active entities within the viewport.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {import('../entities/EntityRegistry.js').EntityRegistry} entityRegistry
+ * @param {number} viewportX
+ * @param {number} viewportY
+ */
+function drawEntities(ctx, entityRegistry, viewportX, viewportY) {
+    const startX = Math.floor(viewportX / TILE_SIZE);
+    const startY = Math.floor(viewportY / TILE_SIZE);
+    const endX = startX + Math.ceil(ctx.canvas.width / TILE_SIZE) + 1;
+    const endY = startY + Math.ceil(ctx.canvas.height / TILE_SIZE) + 1;
+
+    for (const entity of entityRegistry.getAll()) {
+        if (entity.x < startX || entity.x >= endX || entity.y < startY || entity.y >= endY) {
+            continue;
+        }
+
+        const screenX = entity.x * TILE_SIZE - viewportX;
+        const screenY = entity.y * TILE_SIZE - viewportY;
+
+        // Draw colored background
+        const bgColor = entity.color || entityColors[entity.type] || '#888';
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(screenX + 2, screenY + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+
+        // Draw glyph
+        if (entity.glyph) {
+            ctx.fillStyle = 'black';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(entity.glyph, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
+        }
+    }
+}
+
+/**
+ * Draw a small indicator showing the player's facing direction.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {import('../game/Player.js').Player} player
+ * @param {number} viewportX
+ * @param {number} viewportY
+ */
+function drawFacingIndicator(ctx, player, viewportX, viewportY) {
+    const centerX = player.x * TILE_SIZE - viewportX + TILE_SIZE / 2;
+    const centerY = player.y * TILE_SIZE - viewportY + TILE_SIZE / 2;
+    const dotX = centerX + player.facing.dx * (TILE_SIZE / 2.5);
+    const dotY = centerY + player.facing.dy * (TILE_SIZE / 2.5);
+
+    ctx.fillStyle = '#e63946';
+    ctx.beginPath();
+    ctx.arc(dotX, dotY, 3, 0, 2 * Math.PI);
+    ctx.fill();
+}
+
+/**
+ * Main draw function. Renders tiles, entities (if provided), player, and facing indicator.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {import('../core/Board.js').Board} board
+ * @param {import('../game/Player.js').Player} player
+ * @param {number} viewportX
+ * @param {number} viewportY
+ * @param {import('../entities/EntityRegistry.js').EntityRegistry} [entityRegistry]
+ */
+export function drawGame(ctx, board, player, viewportX, viewportY, entityRegistry) {
     const VIEWPORT_TILES_X = ctx.canvas.width / TILE_SIZE;
     const VIEWPORT_TILES_Y = ctx.canvas.height / TILE_SIZE;
 
@@ -91,5 +156,11 @@ export function drawGame(ctx, board, player, viewportX, viewportY) {
         }
     }
 
+    // Entities render between tiles and player
+    if (entityRegistry) {
+        drawEntities(ctx, entityRegistry, viewportX, viewportY);
+    }
+
     drawPlayer(ctx, player, viewportX, viewportY);
+    drawFacingIndicator(ctx, player, viewportX, viewportY);
 }
