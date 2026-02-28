@@ -46,6 +46,10 @@ function updateViewport() {
 
 function updateGameInfo() {
     document.getElementById('crystal-count').textContent = player.crystals;
+    const healthEl = document.getElementById('health-display');
+    if (healthEl) {
+        healthEl.textContent = `Health: ${player.health}/${player.maxHealth}`;
+    }
 }
 
 /**
