@@ -65,6 +65,7 @@
       "id": "elders_request",
       "name": "The Elder's Request",
       "description": "Help the Village Elder find a rare crystal from the cave.",
+      "autoStart": true,
       "stages": [
         {
           "description": "Talk to the Village Elder in Oakvale Village",
