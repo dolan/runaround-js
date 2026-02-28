@@ -12,6 +12,12 @@ import { createEntity } from '../entities/EntityFactory.js';
 import { Inventory } from '../entities/Inventory.js';
 import { DialogueSystem } from '../entities/DialogueSystem.js';
 import { drawHud } from '../ui/HudRenderer.js';
+import { EventBus, GameEvents } from '../events/EventBus.js';
+import { WorldState } from '../events/WorldState.js';
+import { TriggerSystem } from '../events/TriggerSystem.js';
+import { QuestSystem } from '../events/QuestSystem.js';
+import { WorldReactor } from '../events/WorldReactor.js';
+import { drawQuestLog } from '../ui/QuestLogRenderer.js';
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -32,6 +38,23 @@ let transitioning = false;
 let entityRegistry = new EntityRegistry();
 let inventory = new Inventory();
 let dialogueSystem = new DialogueSystem();
+
+// Event system state
+let eventBus = new EventBus();
+let worldState = new WorldState(eventBus);
+let questLogVisible = false;
+
+// Getter-based context so TriggerSystem/QuestSystem/WorldReactor always see current refs
+const gameContext = {
+    get inventory() { return inventory; },
+    get entityRegistry() { return entityRegistry; },
+    get dialogueSystem() { return dialogueSystem; },
+    get questSystem() { return questSystem; }
+};
+
+let triggerSystem = new TriggerSystem(eventBus, worldState, gameContext);
+let questSystem = new QuestSystem(eventBus, worldState, gameContext);
+let worldReactor = new WorldReactor(eventBus, worldState, gameContext);
 
 const playerCallbacks = {
     onGameInfoUpdate: updateGameInfo,
@@ -70,6 +93,9 @@ function gameLoop() {
         drawHud(ctx, player, inventory);
         if (worldGraph && playerState) {
             drawMinimap(ctx, worldGraph, playerState);
+        }
+        if (questLogVisible && questSystem) {
+            drawQuestLog(ctx, questSystem);
         }
     }
     requestAnimationFrame(gameLoop);
@@ -176,10 +202,19 @@ async function enterBoard(boardId, destX, destY) {
         // Load entities from board data
         entityRegistry = loadEntities(boardData);
 
+        // Load board-specific triggers (clear previous board's triggers first)
+        triggerSystem.clearTriggersBySource('board');
+        if (boardData.triggers) {
+            triggerSystem.registerTriggers(boardData.triggers, 'board');
+        }
+
         const info = worldGraph.getBoardInfo(boardId);
         updateBoardName(info ? info.name : boardId);
         updateGameInfo();
         startGameLoop();
+
+        // Emit BOARD_ENTER after everything is loaded so WorldReactor/QuestSystem can react
+        eventBus.emit(GameEvents.BOARD_ENTER, { boardId });
     } catch (error) {
         console.error(`Failed to enter board ${boardId}:`, error);
         showMessage(`Failed to load board: ${boardId}`);
@@ -210,6 +245,13 @@ async function startGame() {
     inventory = new Inventory();
     dialogueSystem = new DialogueSystem();
 
+    // Reset event system
+    eventBus = new EventBus();
+    worldState = new WorldState(eventBus);
+    triggerSystem = new TriggerSystem(eventBus, worldState, gameContext);
+    questSystem = new QuestSystem(eventBus, worldState, gameContext);
+    worldReactor = new WorldReactor(eventBus, worldState, gameContext);
+
     try {
         const response = await fetch('levels/world.json');
 
@@ -218,6 +260,16 @@ async function startGame() {
             worldGraph = new WorldGraph(worldData);
             playerState = new PlayerState(worldGraph.getStartBoardId());
             playerCallbacks.onTransition = handleTransition;
+
+            // Load quests from world data
+            if (worldData.quests) {
+                questSystem.loadQuests(worldData.quests);
+            }
+            // Load global triggers from world data
+            if (worldData.triggers) {
+                triggerSystem.registerTriggers(worldData.triggers, 'global');
+            }
+
             await enterBoard(worldGraph.getStartBoardId());
             console.log('World mode active');
             return;
@@ -250,6 +302,9 @@ function handleInteraction() {
     const result = entity.interact(player, { board, entityRegistry, inventory });
     if (!result) return;
 
+    // Emit interaction event for all result types
+    eventBus.emit(GameEvents.ENTITY_INTERACT, { entityId: entity.id, entityType: entity.type, result });
+
     switch (result.type) {
         case 'dialogue':
             dialogueSystem.startSimple(result.speaker, result.text);
@@ -258,11 +313,13 @@ function handleInteraction() {
             inventory.add(result.itemId);
             entityRegistry.cleanup();
             showMessage(result.description);
+            eventBus.emit(GameEvents.ITEM_PICKUP, { itemId: result.itemId, entityId: entity.id });
             break;
         case 'combat': {
             if (result.defeated) {
                 entityRegistry.cleanup();
                 showMessage(`Defeated the enemy!`);
+                eventBus.emit(GameEvents.ENTITY_DEFEAT, { entityId: entity.id });
             } else {
                 showMessage(`You attack! Enemy has ${entity.health} HP left.`);
             }
@@ -270,6 +327,7 @@ function handleInteraction() {
         }
         case 'lever':
             showMessage(`Lever ${result.activated ? 'activated' : 'deactivated'}.`);
+            eventBus.emit(GameEvents.LEVER_TOGGLE, { entityId: entity.id, activated: result.activated });
             break;
     }
 }
@@ -339,6 +397,15 @@ document.addEventListener('keydown', (event) => {
         return;
     }
 
+    // Quest log toggle
+    if (event.key === 'q' || event.key === 'Q') {
+        questLogVisible = !questLogVisible;
+        return;
+    }
+
+    // Block other input when quest log is visible
+    if (questLogVisible) return;
+
     if (event.key === 'Enter') {
         hideMessage();
         return;
@@ -371,6 +438,7 @@ document.addEventListener('keydown', (event) => {
         }
 
         player.move(dx, dy, playerCallbacks);
+        eventBus.emit(GameEvents.PLAYER_MOVE, { x: player.x, y: player.y, dx, dy });
 
         // After player moves, update all entities (turn-based: enemies move after player)
         entityRegistry.updateAll(player, { board, entityRegistry, inventory });
