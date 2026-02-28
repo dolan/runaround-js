@@ -5,8 +5,31 @@
     ["w", ".", ".", ".", ".", "w", ".", "w", "w", "w", ".", ".", ".", "w"],
     ["w", "c", ".", ".", ".", "c", "w", ".", ".", ".", ".", "w", ".", "w"],
     ["w", ".", "m", ".", "m", ".", ".", ".", ".", ".", ".", "w", "c", "w"],
-    ["w", ".", ".", ".", ".", "x", "w", ".", ".", ".", ".", ".", "d", "w"],
+    ["w", "d", ".", ".", ".", "x", "w", ".", ".", ".", ".", ".", "d", "w"],
     ["w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w"]
   ],
-  "required_crystals": 3
+  "required_crystals": 3,
+  "entities": [
+    {
+      "id": "clearing_sign",
+      "type": "interactive",
+      "x": 7,
+      "y": 3,
+      "properties": {
+        "objectType": "sign",
+        "text": "The Clearing. Exits lead to the cave and tower. A path south leads to the village."
+      }
+    },
+    {
+      "id": "clearing_potion",
+      "type": "item",
+      "x": 10,
+      "y": 4,
+      "glyph": "🧪",
+      "properties": {
+        "itemId": "health_potion",
+        "description": "A health potion found in the clearing."
+      }
+    }
+  ]
 }
