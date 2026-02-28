@@ -23,7 +23,9 @@ export const itemGlyphs = {
     gem: '💎',
     scroll: '📜',
     ring: '💍',
-    lantern: '🔦'
+    lantern: '🔦',
+    rare_crystal: '💎',
+    elder_amulet: '🧿'
 };
 
 const FALLBACK_GLYPH = '📦';

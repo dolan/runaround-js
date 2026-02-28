@@ -24,6 +24,30 @@
           "Welcome to the village, traveler.",
           "The crystal cave to the east holds many secrets.",
           "Be careful of the slimes — they bite!"
+        ],
+        "conditionalDialogue": [
+          {
+            "conditions": [{ "flag": "quest_elders_request_complete", "value": true }],
+            "dialogue": [
+              "Thank you for finding the crystal, hero!",
+              "The amulet will serve you well on your journey.",
+              "You are always welcome in Oakvale."
+            ]
+          },
+          {
+            "conditions": [{ "flag": "has_rare_crystal", "value": true }],
+            "dialogue": [
+              "You found the rare crystal! Wonderful!",
+              "Please, give it to me and I shall reward you."
+            ]
+          },
+          {
+            "conditions": [{ "flag": "quest_elders_request_active", "value": true }],
+            "dialogue": [
+              "The rare crystal should be somewhere in the cave to the east.",
+              "Please hurry — I need it for an important ritual."
+            ]
+          }
         ]
       }
     },

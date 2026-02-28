@@ -8,5 +8,21 @@
     ["w", ".", ".", "m", ".", "x", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "h", "w"],
     ["w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w"]
   ],
-  "required_crystals": 5
+  "required_crystals": 5,
+  "entities": [
+    {
+      "id": "rare_crystal",
+      "type": "item",
+      "x": 13,
+      "y": 3,
+      "glyph": "💎",
+      "properties": {
+        "itemId": "rare_crystal",
+        "description": "A rare crystal, pulsing with inner light. The Elder needs this!",
+        "conditions": {
+          "visible": [{ "flag": "quest_elders_request_active", "value": true }]
+        }
+      }
+    }
+  ]
 }

@@ -17,7 +17,13 @@
       "y": 3,
       "properties": {
         "objectType": "sign",
-        "text": "The Clearing. Exits lead to the cave and tower. A path south leads to the village."
+        "text": "The Clearing. Exits lead to the cave and tower. A path south leads to the village.",
+        "conditionalText": [
+          {
+            "conditions": [{ "flag": "quest_elders_request_complete", "value": true }],
+            "text": "The Clearing. The Elder's quest is complete — a hero walks among us! Exits lead to the cave, tower, and village."
+          }
+        ]
       }
     },
     {

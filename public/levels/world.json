@@ -51,5 +51,47 @@
       "from": { "board": "village", "x": 10, "y": 7, "type": "door" },
       "to":   { "board": "clearing", "x": 1, "y": 5 }
     }
+  ],
+  "quests": [
+    {
+      "id": "elders_request",
+      "name": "The Elder's Request",
+      "description": "Help the Village Elder find a rare crystal from the cave.",
+      "stages": [
+        {
+          "description": "Talk to the Village Elder in Oakvale Village",
+          "objectives": [{ "type": "interact", "entityId": "elder" }],
+          "onComplete": [
+            { "type": "setFlag", "flag": "quest_elders_request_active", "value": true },
+            { "type": "showMessage", "speaker": "System", "text": "New Quest: The Elder's Request" }
+          ]
+        },
+        {
+          "description": "Find the rare crystal in Crystal Cave",
+          "objectives": [{ "type": "pickup", "itemId": "rare_crystal" }],
+          "onComplete": [
+            { "type": "setFlag", "flag": "has_rare_crystal", "value": true },
+            { "type": "showMessage", "speaker": "System", "text": "Quest Updated: Return the crystal to the Elder" }
+          ]
+        },
+        {
+          "description": "Return the rare crystal to the Village Elder",
+          "objectives": [
+            {
+              "type": "interact",
+              "entityId": "elder",
+              "requiredFlags": [{ "flag": "has_rare_crystal", "value": true }]
+            }
+          ],
+          "onComplete": [
+            { "type": "removeItem", "itemId": "rare_crystal" },
+            { "type": "giveItem", "itemId": "elder_amulet" },
+            { "type": "setFlag", "flag": "quest_elders_request_complete", "value": true },
+            { "type": "setFlag", "flag": "cave_passage_unlocked", "value": true },
+            { "type": "showMessage", "speaker": "Village Elder", "text": "Thank you! Take this amulet as a reward." }
+          ]
+        }
+      ]
+    }
   ]
 }
