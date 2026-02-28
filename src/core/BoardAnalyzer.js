@@ -245,7 +245,7 @@ export class BoardAnalyzer {
                 const tile = currentBoard.tiles[newY][newX];
 
                 // Check if we can move to this tile directly
-                if (tile === '.' || tile === 'c' || tile === 'x' ||
+                if (tile === '.' || tile === 'c' || tile === 'x' || tile === 'd' ||
                     tile === 'ol' || tile === 'or' || tile === 'ou' || tile === 'od') {
                     // Regular movement to an open space
                     this.processNeighbor(
@@ -761,7 +761,7 @@ export class BoardAnalyzer {
         }
 
         const tile = this.board.getTile(x, y);
-        return tile === '.' || tile === 'c' || tile === 'x' ||
+        return tile === '.' || tile === 'c' || tile === 'x' || tile === 'd' ||
                tile === 'm' || // Movable blocks are walkable in path finding
                tile === 'ol' || tile === 'or' || tile === 'ou' || tile === 'od'; // One-way doors are walkable
     }
