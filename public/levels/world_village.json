@@ -1,0 +1,76 @@
+{
+  "tiles": [
+    ["w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w"],
+    ["w", "p", ".", ".", ".", ".", ".", ".", ".", ".", ".", "w"],
+    ["w", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "w"],
+    ["w", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "w"],
+    ["w", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "w"],
+    ["w", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "w"],
+    ["w", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "w"],
+    ["w", ".", ".", ".", ".", ".", ".", ".", ".", ".", "d", "w"],
+    ["w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w", "w"]
+  ],
+  "required_crystals": 0,
+  "entities": [
+    {
+      "id": "elder",
+      "type": "npc",
+      "x": 3,
+      "y": 2,
+      "glyph": "👴",
+      "properties": {
+        "name": "Village Elder",
+        "dialogue": [
+          "Welcome to the village, traveler.",
+          "The crystal cave to the east holds many secrets.",
+          "Be careful of the slimes — they bite!"
+        ]
+      }
+    },
+    {
+      "id": "slime1",
+      "type": "enemy",
+      "x": 8,
+      "y": 5,
+      "glyph": "🟢",
+      "properties": {
+        "health": 2,
+        "damage": 1
+      }
+    },
+    {
+      "id": "health_potion",
+      "type": "item",
+      "x": 5,
+      "y": 6,
+      "glyph": "🧪",
+      "properties": {
+        "itemId": "health_potion",
+        "description": "A health potion. Restores vitality!"
+      }
+    },
+    {
+      "id": "village_sign",
+      "type": "interactive",
+      "x": 2,
+      "y": 1,
+      "properties": {
+        "objectType": "sign",
+        "text": "Welcome to Oakvale Village. Press SPACE to interact with things!"
+      }
+    },
+    {
+      "id": "treasure_chest",
+      "type": "interactive",
+      "x": 9,
+      "y": 3,
+      "glyph": "📦",
+      "properties": {
+        "objectType": "chest",
+        "itemId": "gold_key",
+        "description": "Found a golden key!",
+        "openedGlyph": "📭"
+      }
+    }
+  ]
+}

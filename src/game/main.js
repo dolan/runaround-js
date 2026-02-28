@@ -7,6 +7,11 @@ import { loadBoardFromFile, saveBoardToFile } from '../ui/fileIO.js';
 import { WorldGraph } from '../world/WorldGraph.js';
 import { PlayerState } from '../world/PlayerState.js';
 import { drawMinimap } from '../world/WorldRenderer.js';
+import { EntityRegistry } from '../entities/EntityRegistry.js';
+import { createEntity } from '../entities/EntityFactory.js';
+import { Inventory } from '../entities/Inventory.js';
+import { DialogueSystem } from '../entities/DialogueSystem.js';
+import { drawHud } from '../ui/HudRenderer.js';
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -23,6 +28,11 @@ let worldGraph = null;
 let playerState = null;
 let transitioning = false;
 
+// Entity system state
+let entityRegistry = new EntityRegistry();
+let inventory = new Inventory();
+let dialogueSystem = new DialogueSystem();
+
 const playerCallbacks = {
     onGameInfoUpdate: updateGameInfo,
     onLevelComplete: loadNextLevel,
@@ -36,6 +46,10 @@ function updateViewport() {
 
 function updateGameInfo() {
     document.getElementById('crystal-count').textContent = player.crystals;
+    const healthEl = document.getElementById('health-display');
+    if (healthEl) {
+        healthEl.textContent = `Health: ${player.health}/${player.maxHealth}`;
+    }
 }
 
 /**
@@ -52,7 +66,8 @@ function updateBoardName(name) {
 function gameLoop() {
     if (board && player) {
         updateViewport();
-        drawGame(ctx, board, player, viewportX, viewportY);
+        drawGame(ctx, board, player, viewportX, viewportY, entityRegistry);
+        drawHud(ctx, player, inventory);
         if (worldGraph && playerState) {
             drawMinimap(ctx, worldGraph, playerState);
         }
@@ -101,8 +116,23 @@ function initGame(boardData) {
     board = new Board(boardData);
     player = new Player(board.startX, board.startY, board);
 
+    // Load entities from board data (backward-compatible: entities key is optional)
+    entityRegistry = loadEntities(boardData);
+
     updateGameInfo();
     startGameLoop();
+}
+
+/**
+ * Load entities from board data into a new EntityRegistry.
+ * @param {Object} boardData
+ * @returns {EntityRegistry}
+ */
+function loadEntities(boardData) {
+    if (boardData.entities && Array.isArray(boardData.entities)) {
+        return EntityRegistry.fromDefinitions(boardData.entities, createEntity);
+    }
+    return new EntityRegistry();
 }
 
 /**
@@ -140,7 +170,11 @@ async function enterBoard(boardId, destX, destY) {
         const startY = destY !== undefined ? destY : board.startY;
 
         player = new Player(startX, startY, board);
+        player.health = 3; // Reset health on board entry
         playerState.enterBoard(boardId);
+
+        // Load entities from board data
+        entityRegistry = loadEntities(boardData);
 
         const info = worldGraph.getBoardInfo(boardId);
         updateBoardName(info ? info.name : boardId);
@@ -173,6 +207,9 @@ function handleTransition(tileX, tileY) {
  * Falls back to legacy sequential levels if world.json is not found.
  */
 async function startGame() {
+    inventory = new Inventory();
+    dialogueSystem = new DialogueSystem();
+
     try {
         const response = await fetch('levels/world.json');
 
@@ -202,6 +239,60 @@ async function startGame() {
     }
 }
 
+/**
+ * Handle player interaction with the entity they are facing.
+ */
+function handleInteraction() {
+    const facing = player.getFacingTile();
+    const entity = entityRegistry.getAt(facing.x, facing.y);
+    if (!entity) return;
+
+    const result = entity.interact(player, { board, entityRegistry, inventory });
+    if (!result) return;
+
+    switch (result.type) {
+        case 'dialogue':
+            dialogueSystem.startSimple(result.speaker, result.text);
+            break;
+        case 'pickup':
+            inventory.add(result.itemId);
+            entityRegistry.cleanup();
+            showMessage(result.description);
+            break;
+        case 'combat': {
+            if (result.defeated) {
+                entityRegistry.cleanup();
+                showMessage(`Defeated the enemy!`);
+            } else {
+                showMessage(`You attack! Enemy has ${entity.health} HP left.`);
+            }
+            break;
+        }
+        case 'lever':
+            showMessage(`Lever ${result.activated ? 'activated' : 'deactivated'}.`);
+            break;
+    }
+}
+
+/**
+ * Check if any enemy is on the player's tile after entity updates.
+ * If so, player takes damage.
+ */
+function checkEnemyCollisions() {
+    const enemies = entityRegistry.getAllOfType('enemy');
+    for (const enemy of enemies) {
+        if (enemy.x === player.x && enemy.y === player.y) {
+            player.health -= enemy.damage;
+            showMessage(`Hit by ${enemy.id}! Health: ${player.health}`);
+            if (player.health <= 0) {
+                showMessage('You have been defeated!');
+                resetGame();
+                return;
+            }
+        }
+    }
+}
+
 function handleFileSelect(event) {
     const file = event.target.files[0];
     if (file) {
@@ -224,8 +315,39 @@ function handleFileSelect(event) {
 document.addEventListener('keydown', (event) => {
     if (transitioning) return;
 
-    if (event.key == 'Enter') {
+    // Route input to dialogue system when active
+    if (dialogueSystem.active) {
+        switch (event.key) {
+            case 'ArrowUp':
+                event.preventDefault();
+                dialogueSystem.selectPrevious();
+                break;
+            case 'ArrowDown':
+                event.preventDefault();
+                dialogueSystem.selectNext();
+                break;
+            case 'Enter':
+            case ' ':
+                event.preventDefault();
+                dialogueSystem.advance();
+                break;
+            case 'Escape':
+                event.preventDefault();
+                dialogueSystem.close();
+                break;
+        }
+        return;
+    }
+
+    if (event.key === 'Enter') {
         hideMessage();
+        return;
+    }
+
+    // Space = interact with facing entity
+    if (event.key === ' ') {
+        event.preventDefault();
+        handleInteraction();
         return;
     }
 
@@ -238,7 +360,25 @@ document.addEventListener('keydown', (event) => {
 
     const [dx, dy] = moveMap[event.key] || [0, 0];
     if (dx !== 0 || dy !== 0) {
+        // Check if target tile has a blocking entity — skip move if so
+        const targetX = player.x + dx;
+        const targetY = player.y + dy;
+        const blockingEntity = entityRegistry.getAt(targetX, targetY);
+        if (blockingEntity && blockingEntity.blocking) {
+            // Still update facing direction even if blocked by entity
+            player.facing = { dx, dy };
+            return;
+        }
+
         player.move(dx, dy, playerCallbacks);
+
+        // After player moves, update all entities (turn-based: enemies move after player)
+        entityRegistry.updateAll(player, { board, entityRegistry, inventory });
+        entityRegistry.cleanup();
+
+        // Check if an enemy moved onto the player
+        checkEnemyCollisions();
+
         updateViewport();
     }
 });

@@ -28,3 +28,10 @@ export const glyphs = {
     rightArrow: '→',
     doorGlyph: '🚪',
 };
+
+export const entityColors = {
+    npc: '#4a90d9',
+    enemy: '#d94a4a',
+    item: '#d9d94a',
+    interactive: '#8B4513'
+};

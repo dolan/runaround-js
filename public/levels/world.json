@@ -15,6 +15,11 @@
       "file": "levels/world_tower.json",
       "name": "The Tower",
       "gridPosition": { "x": 1, "y": 1 }
+    },
+    "village": {
+      "file": "levels/world_village.json",
+      "name": "Oakvale Village",
+      "gridPosition": { "x": 0, "y": 1 }
     }
   },
   "transitions": [
@@ -37,6 +42,14 @@
     {
       "from": { "board": "tower", "x": 14, "y": 8, "type": "door" },
       "to":   { "board": "cave", "x": 18, "y": 1 }
+    },
+    {
+      "from": { "board": "clearing", "x": 1, "y": 5, "type": "door" },
+      "to":   { "board": "village", "x": 10, "y": 7 }
+    },
+    {
+      "from": { "board": "village", "x": 10, "y": 7, "type": "door" },
+      "to":   { "board": "clearing", "x": 1, "y": 5 }
     }
   ]
 }
