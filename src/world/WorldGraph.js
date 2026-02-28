@@ -112,6 +112,14 @@ export class WorldGraph {
     }
 
     /**
+     * Get all transitions in the world.
+     * @returns {Transition[]}
+     */
+    getAllTransitions() {
+        return [...this.transitionIndex.values()];
+    }
+
+    /**
      * Get the starting board ID.
      * @returns {string}
      */

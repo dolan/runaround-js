@@ -50,7 +50,7 @@ export function drawMinimap(ctx, worldGraph, playerState) {
 
     // Draw connection lines
     const drawnEdges = new Set();
-    for (const transition of worldGraph.transitionIndex.values()) {
+    for (const transition of worldGraph.getAllTransitions()) {
         const edgeKey = [transition.fromBoard, transition.toBoard].sort().join('-');
         if (drawnEdges.has(edgeKey)) continue;
         drawnEdges.add(edgeKey);

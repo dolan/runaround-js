@@ -83,8 +83,8 @@ describe('WorldGraph', () => {
         expect(destinations).toContain('tower');
     });
 
-    test('getTransitionsForBoard returns empty array for board with no outgoing transitions', () => {
-        // tower only has one outgoing transition to cave
+    test('getTransitionsForBoard returns single outgoing transition for a board with one transition', () => {
+        // tower has one outgoing transition to cave
         const transitions = graph.getTransitionsForBoard('tower');
         expect(transitions).toHaveLength(1);
     });

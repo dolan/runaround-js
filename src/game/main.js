@@ -66,7 +66,6 @@ function resetGame() {
         enterBoard(playerState.currentBoardId);
     } else {
         initGame(board.getOriginalState());
-        board.findStartPosition();
     }
 }
 
@@ -176,24 +175,30 @@ function handleTransition(tileX, tileY) {
 async function startGame() {
     try {
         const response = await fetch('levels/world.json');
-        if (!response.ok) {
-            throw new Error('world.json not found');
+
+        if (response.ok) {
+            const worldData = await response.json();
+            worldGraph = new WorldGraph(worldData);
+            playerState = new PlayerState(worldGraph.getStartBoardId());
+            playerCallbacks.onTransition = handleTransition;
+            await enterBoard(worldGraph.getStartBoardId());
+            console.log('World mode active');
+            return;
         }
-        const worldData = await response.json();
-        worldGraph = new WorldGraph(worldData);
-        playerState = new PlayerState(worldGraph.getStartBoardId());
 
-        // World mode callbacks: use onTransition instead of onLevelComplete
-        playerCallbacks.onTransition = handleTransition;
+        if (response.status === 404) {
+            console.log('No world.json found, using legacy level progression');
+            worldGraph = null;
+            playerState = null;
+            loadNextLevel();
+            return;
+        }
 
-        await enterBoard(worldGraph.getStartBoardId());
-        console.log('World mode active');
+        console.error(`Failed to load world.json: HTTP ${response.status} ${response.statusText}`);
+        showMessage('Error loading world configuration. Please check world.json.');
     } catch (error) {
-        // Legacy mode: sequential levels
-        console.log('No world.json found, using legacy level progression');
-        worldGraph = null;
-        playerState = null;
-        loadNextLevel();
+        console.error('Unexpected error while starting game in world mode:', error);
+        showMessage('Unexpected error loading world configuration. See console for details.');
     }
 }
 

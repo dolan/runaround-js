@@ -56,10 +56,10 @@ export class Player {
 
     tryExit(newX, newY, callbacks) {
         if (this.crystals >= this.board.requiredCrystals) {
-            showMessage('Level Complete!');
             if (callbacks && callbacks.onTransition) {
                 callbacks.onTransition(newX, newY);
             } else if (callbacks && callbacks.onLevelComplete) {
+                showMessage('Level Complete!');
                 callbacks.onLevelComplete();
             }
         }
