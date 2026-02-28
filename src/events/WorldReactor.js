@@ -38,14 +38,15 @@ export class WorldReactor {
     }
 
     /**
-     * Set entity.active based on conditions.visible flags.
+     * Set entity.hidden based on conditions.visible flags.
+     * Uses `hidden` rather than `active` so cleanup() doesn't permanently delete hidden entities.
      * @param {import('../entities/Entity.js').Entity} entity
      */
     _applyVisibility(entity) {
         const conditions = entity.properties.conditions;
         if (!conditions || !conditions.visible) return;
 
-        entity.active = this._worldState.checkAll(conditions.visible);
+        entity.hidden = !this._worldState.checkAll(conditions.visible);
     }
 
     /**
@@ -58,7 +59,7 @@ export class WorldReactor {
         if (!conditionals || !Array.isArray(conditionals)) return;
 
         // Store original dialogue on first application
-        if (!entity._originalDialogue) {
+        if (entity._originalDialogue === undefined) {
             entity._originalDialogue = entity.properties.dialogue;
         }
 
@@ -85,7 +86,7 @@ export class WorldReactor {
         if (!conditionals || !Array.isArray(conditionals)) return;
 
         // Store original text on first application
-        if (!entity._originalText) {
+        if (entity._originalText === undefined) {
             entity._originalText = entity.properties.text;
         }
 

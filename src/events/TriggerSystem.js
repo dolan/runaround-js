@@ -24,12 +24,12 @@ export function executeActions(actions, eventData, context) {
                 break;
             case 'giveItem':
                 if (context.inventory) {
-                    context.inventory.add(action.itemId, action.count || 1);
+                    context.inventory.add(action.itemId, action.count ?? 1);
                 }
                 break;
             case 'removeItem':
                 if (context.inventory) {
-                    context.inventory.remove(action.itemId, action.count || 1);
+                    context.inventory.remove(action.itemId, action.count ?? 1);
                 }
                 break;
             case 'startQuest':
@@ -49,7 +49,7 @@ export function executeActions(actions, eventData, context) {
                 break;
             case 'emit':
                 if (context.eventBus) {
-                    context.eventBus.emit(action.event, action.data || {});
+                    context.eventBus.emit(action.event, action.data ?? {});
                 }
                 break;
         }

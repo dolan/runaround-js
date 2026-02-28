@@ -39,11 +39,12 @@ describe('WorldReactor', () => {
         entities.set('e1', entity);
 
         reactor.applyAll();
-        expect(entity.active).toBe(false);
+        expect(entity.hidden).toBe(true);
+        expect(entity.active).toBe(true); // active unchanged — hidden is separate
 
         ws.set('quest_active', true);
         // FLAG_CHANGED triggers applyAll
-        expect(entity.active).toBe(true);
+        expect(entity.hidden).toBe(false);
     });
 
     test('swaps NPC dialogue based on conditionalDialogue', () => {
@@ -177,7 +178,7 @@ describe('WorldReactor', () => {
         entities.set('e1', entity);
 
         bus.emit(GameEvents.BOARD_ENTER, { boardId: 'test' });
-        expect(entity.active).toBe(false);
+        expect(entity.hidden).toBe(true);
     });
 
     test('skips non-NPC entities for dialogue', () => {
@@ -226,7 +227,7 @@ describe('WorldReactor', () => {
         reactor.destroy();
         ws.set('show', true);
         // applyAll should NOT have been called
-        expect(entity.active).toBe(true); // unchanged — visibility not re-evaluated
+        expect(entity.hidden).toBeUndefined(); // unchanged — visibility not re-evaluated
     });
 
     test('handles missing entityRegistry gracefully', () => {

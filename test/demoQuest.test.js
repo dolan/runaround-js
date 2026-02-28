@@ -126,7 +126,7 @@ describe('Demo Quest: The Elder\'s Request', () => {
 
         // Initially: crystal is hidden (quest not active)
         reactor.applyAll();
-        expect(entities.get('rare_crystal').active).toBe(false);
+        expect(entities.get('rare_crystal').hidden).toBe(true);
         expect(entities.get('elder').properties.dialogue).toEqual(['Welcome to the village, traveler.']);
 
         // Stage 1: Talk to elder → quest starts
@@ -140,7 +140,7 @@ describe('Demo Quest: The Elder\'s Request', () => {
         expect(qs.getActiveQuests()[0].stageDescription).toBe('Find the rare crystal in Crystal Cave');
 
         // WorldReactor updates: crystal now visible, elder dialogue changed
-        expect(entities.get('rare_crystal').active).toBe(true);
+        expect(entities.get('rare_crystal').hidden).toBe(false);
         expect(entities.get('elder').properties.dialogue).toEqual(
             ['The rare crystal should be somewhere in the cave.']
         );

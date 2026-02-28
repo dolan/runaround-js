@@ -48,19 +48,22 @@ export class WorldState {
      */
     check(key, value) {
         if (arguments.length >= 2) {
-            return this._flags.get(key) === value;
+            return this._flags.has(key) && this._flags.get(key) === value;
         }
         return !!this._flags.get(key);
     }
 
     /**
      * Check all conditions. Each condition is { flag, value }.
-     * @param {Array<{ flag: string, value: * }>} conditions
+     * If `value` is omitted from a condition, the flag is checked for truthiness.
+     * @param {Array<{ flag: string, value?: * }>} conditions
      * @returns {boolean} True if all conditions are met
      */
     checkAll(conditions) {
         if (!conditions || conditions.length === 0) return true;
-        return conditions.every(c => this.check(c.flag, c.value));
+        return conditions.every(c =>
+            ('value' in c) ? this.check(c.flag, c.value) : this.check(c.flag)
+        );
     }
 
     /**

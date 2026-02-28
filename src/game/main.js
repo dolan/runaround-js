@@ -244,6 +244,7 @@ function handleTransition(tileX, tileY) {
 async function startGame() {
     inventory = new Inventory();
     dialogueSystem = new DialogueSystem();
+    questLogVisible = false;
 
     // Reset event system
     eventBus = new EventBus();

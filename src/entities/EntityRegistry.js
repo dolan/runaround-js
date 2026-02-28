@@ -54,7 +54,7 @@ export class EntityRegistry {
      */
     getAt(x, y) {
         const entity = this.positionIndex.get(EntityRegistry.posKey(x, y));
-        return (entity && entity.active) ? entity : null;
+        return (entity && entity.active && !entity.hidden) ? entity : null;
     }
 
     /**
@@ -82,7 +82,7 @@ export class EntityRegistry {
      * @returns {import('./Entity.js').Entity[]}
      */
     getAll() {
-        return Array.from(this.entities.values()).filter(e => e.active);
+        return Array.from(this.entities.values()).filter(e => e.active && !e.hidden);
     }
 
     /**
