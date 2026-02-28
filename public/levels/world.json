@@ -50,6 +50,14 @@
     {
       "from": { "board": "village", "x": 10, "y": 7, "type": "door" },
       "to":   { "board": "clearing", "x": 1, "y": 5 }
+    },
+    {
+      "from": { "board": "clearing", "x": 10, "y": 3, "type": "door" },
+      "to":   { "board": "cave", "x": 18, "y": 3 }
+    },
+    {
+      "from": { "board": "cave", "x": 17, "y": 3, "type": "door" },
+      "to":   { "board": "clearing", "x": 9, "y": 3 }
     }
   ],
   "quests": [
