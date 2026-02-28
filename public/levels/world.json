@@ -1,0 +1,42 @@
+{
+  "startBoard": "clearing",
+  "boards": {
+    "clearing": {
+      "file": "levels/world_clearing.json",
+      "name": "The Clearing",
+      "gridPosition": { "x": 0, "y": 0 }
+    },
+    "cave": {
+      "file": "levels/world_cave.json",
+      "name": "Crystal Cave",
+      "gridPosition": { "x": 1, "y": 0 }
+    },
+    "tower": {
+      "file": "levels/world_tower.json",
+      "name": "The Tower",
+      "gridPosition": { "x": 1, "y": 1 }
+    }
+  },
+  "transitions": [
+    {
+      "from": { "board": "clearing", "x": 5, "y": 5, "type": "exit" },
+      "to":   { "board": "cave", "x": 2, "y": 1 }
+    },
+    {
+      "from": { "board": "clearing", "x": 12, "y": 5, "type": "door" },
+      "to":   { "board": "tower", "x": 14, "y": 7 }
+    },
+    {
+      "from": { "board": "cave", "x": 1, "y": 1, "type": "door" },
+      "to":   { "board": "clearing", "x": 1, "y": 1 }
+    },
+    {
+      "from": { "board": "cave", "x": 5, "y": 5, "type": "exit" },
+      "to":   { "board": "tower", "x": 6, "y": 8 }
+    },
+    {
+      "from": { "board": "tower", "x": 14, "y": 8, "type": "door" },
+      "to":   { "board": "cave", "x": 18, "y": 1 }
+    }
+  ]
+}
