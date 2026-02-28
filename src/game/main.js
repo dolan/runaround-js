@@ -11,6 +11,7 @@ import { EntityRegistry } from '../entities/EntityRegistry.js';
 import { createEntity } from '../entities/EntityFactory.js';
 import { Inventory } from '../entities/Inventory.js';
 import { DialogueSystem } from '../entities/DialogueSystem.js';
+import { drawHud } from '../ui/HudRenderer.js';
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -62,6 +63,7 @@ function gameLoop() {
     if (board && player) {
         updateViewport();
         drawGame(ctx, board, player, viewportX, viewportY, entityRegistry);
+        drawHud(ctx, player, inventory);
         if (worldGraph && playerState) {
             drawMinimap(ctx, worldGraph, playerState);
         }

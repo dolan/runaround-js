@@ -7,6 +7,7 @@ export class Player {
         this.board = board;
         this.crystals = 0;
         this.facing = { dx: 0, dy: 1 }; // default: facing down
+        this.maxHealth = 3;
         this.health = 3;
     }
 
