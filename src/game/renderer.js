@@ -11,7 +11,8 @@ function getTileColor(tile) {
         'ol': gameColors.obstacle,
         'or': gameColors.obstacle,
         'ou': gameColors.obstacle,
-        'od': gameColors.obstacle
+        'od': gameColors.obstacle,
+        'd': gameColors.door
     };
     return colorMap[tile] || 'white';
 }
@@ -25,7 +26,8 @@ function getTileGlyph(tile, player, board) {
         'ol': glyphs.leftArrow,
         'or': glyphs.rightArrow,
         'ou': glyphs.upArrow,
-        'od': glyphs.downArrow
+        'od': glyphs.downArrow,
+        'd': glyphs.doorGlyph
     };
     return glyphMap[tile] || '';
 }

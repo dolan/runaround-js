@@ -12,7 +12,8 @@ export const gameColors = {
     player: '#e63946',
     crystal: '#06d6a0',
     obstacle: '#ffd166',
-    exit: '#118ab2'
+    exit: '#118ab2',
+    door: '#8B4513'
 };
 
 export const glyphs = {
@@ -25,4 +26,5 @@ export const glyphs = {
     downArrow: '↓',
     leftArrow: '←',
     rightArrow: '→',
+    doorGlyph: '🚪',
 };
