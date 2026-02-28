@@ -22,7 +22,14 @@ export class Player {
                     this.collectCrystal(newX, newY, callbacks);
                     break;
                 case 'x':
-                    this.tryExit(callbacks);
+                    this.tryExit(newX, newY, callbacks);
+                    break;
+                case 'd':
+                    this.x = newX;
+                    this.y = newY;
+                    if (callbacks && callbacks.onTransition) {
+                        callbacks.onTransition(newX, newY);
+                    }
                     break;
                 case 'm':
                     this.pushMovable(newX, newY, dx, dy);
@@ -47,10 +54,12 @@ export class Player {
         }
     }
 
-    tryExit(callbacks) {
+    tryExit(newX, newY, callbacks) {
         if (this.crystals >= this.board.requiredCrystals) {
             showMessage('Level Complete!');
-            if (callbacks && callbacks.onLevelComplete) {
+            if (callbacks && callbacks.onTransition) {
+                callbacks.onTransition(newX, newY);
+            } else if (callbacks && callbacks.onLevelComplete) {
                 callbacks.onLevelComplete();
             }
         }
