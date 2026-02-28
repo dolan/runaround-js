@@ -216,4 +216,60 @@ describe('Player', () => {
         // Player should NOT have moved (exit blocks when crystals insufficient)
         expect(player.x).toBe(1);
     });
+
+    test('has default facing direction (down) and health', () => {
+        const board = makeBoard([
+            ['w', 'w', 'w'],
+            ['w', 'p', 'w'],
+            ['w', 'w', 'w']
+        ]);
+        const player = new Player(1, 1, board);
+        expect(player.facing).toEqual({ dx: 0, dy: 1 });
+        expect(player.health).toBe(3);
+    });
+
+    test('move updates facing direction', () => {
+        const board = makeBoard([
+            ['w', 'w', 'w', 'w'],
+            ['w', 'p', '.', 'w'],
+            ['w', '.', '.', 'w'],
+            ['w', 'w', 'w', 'w']
+        ]);
+        const player = new Player(1, 1, board);
+
+        player.move(1, 0, {});
+        expect(player.facing).toEqual({ dx: 1, dy: 0 });
+
+        player.move(0, 1, {});
+        expect(player.facing).toEqual({ dx: 0, dy: 1 });
+    });
+
+    test('facing updates even when move is blocked', () => {
+        const board = makeBoard([
+            ['w', 'w', 'w'],
+            ['w', 'p', 'w'],
+            ['w', 'w', 'w']
+        ]);
+        const player = new Player(1, 1, board);
+
+        player.move(-1, 0, {});
+        expect(player.facing).toEqual({ dx: -1, dy: 0 });
+        expect(player.x).toBe(1); // didn't move
+    });
+
+    test('getFacingTile returns correct tile', () => {
+        const board = makeBoard([
+            ['w', 'w', 'w', 'w'],
+            ['w', 'p', '.', 'w'],
+            ['w', 'w', 'w', 'w']
+        ]);
+        const player = new Player(1, 1, board);
+
+        // Default facing is down
+        expect(player.getFacingTile()).toEqual({ x: 1, y: 2 });
+
+        // After moving right, facing is right
+        player.move(1, 0, {});
+        expect(player.getFacingTile()).toEqual({ x: 3, y: 1 });
+    });
 });

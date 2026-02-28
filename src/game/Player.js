@@ -6,9 +6,21 @@ export class Player {
         this.y = y;
         this.board = board;
         this.crystals = 0;
+        this.facing = { dx: 0, dy: 1 }; // default: facing down
+        this.health = 3;
+    }
+
+    /**
+     * Get the tile position the player is facing.
+     * @returns {{ x: number, y: number }}
+     */
+    getFacingTile() {
+        return { x: this.x + this.facing.dx, y: this.y + this.facing.dy };
     }
 
     move(dx, dy, callbacks) {
+        // Update facing direction on every move attempt
+        this.facing = { dx, dy };
         const newX = this.x + dx;
         const newY = this.y + dy;
         if (newX >= 0 && newX < this.board.width && newY >= 0 && newY < this.board.height) {
