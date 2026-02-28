@@ -25,6 +25,7 @@ export class NPC extends Entity {
         const dialogue = this.properties.dialogue || [];
         if (dialogue.length === 0) return null;
 
+        if (this.dialogueIndex >= dialogue.length) this.dialogueIndex = 0;
         const text = dialogue[this.dialogueIndex];
         this.dialogueIndex = (this.dialogueIndex + 1) % dialogue.length;
 
