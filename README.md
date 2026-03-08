@@ -14,6 +14,9 @@ and re-implementing since I was 14 years old (in 1994).
 * Don't fall into holes, or you'll die
 * One way doors are just what they look and sound like
 * Walk through doors to travel between connected boards
+* Press 1-9 or click a slot to select an inventory item
+* Press E to use the selected item (health potions restore HP, gold keys unlock doors)
+* Press Q to toggle the quest log
 * If you get stuck, you can reset the current board by clicking on 'Restart'
 
 ## Demo
