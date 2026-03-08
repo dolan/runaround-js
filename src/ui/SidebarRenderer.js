@@ -13,6 +13,7 @@ let _prevRequired = -1;
 let _prevBoardName = null;
 let _prevInventoryKey = null;
 let _prevQuestKey = null;
+let _onSlotClick = null;
 
 /**
  * Update the health display in the sidebar.
@@ -81,6 +82,14 @@ function getItemGlyph(itemId) {
 }
 
 /**
+ * Set the callback for when an inventory slot is clicked.
+ * @param {function(number): void} callback - Called with the slot index (0-8)
+ */
+export function setSlotClickHandler(callback) {
+    _onSlotClick = callback;
+}
+
+/**
  * Update the inventory grid in the sidebar.
  * Renders a 3×3 grid of slots. Items show glyph + count.
  * @param {import('../entities/Inventory.js').Inventory} inventory
@@ -116,6 +125,11 @@ export function updateInventory(inventory, selectedIndex = -1) {
         keyLabel.className = 'inventory-slot-key';
         keyLabel.textContent = String(i + 1);
         slot.appendChild(keyLabel);
+
+        const slotIndex = i;
+        slot.addEventListener('click', () => {
+            if (_onSlotClick) _onSlotClick(slotIndex);
+        });
 
         grid.appendChild(slot);
     }

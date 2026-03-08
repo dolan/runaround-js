@@ -10,7 +10,7 @@ import { EntityRegistry } from '../entities/EntityRegistry.js';
 import { createEntity } from '../entities/EntityFactory.js';
 import { Inventory } from '../entities/Inventory.js';
 import { DialogueSystem } from '../entities/DialogueSystem.js';
-import { updateHealth, updateCrystals, updateBoardName as updateSidebarBoardName, updateInventory, updateQuests, resetCache } from '../ui/SidebarRenderer.js';
+import { updateHealth, updateCrystals, updateBoardName as updateSidebarBoardName, updateInventory, updateQuests, resetCache, setSlotClickHandler } from '../ui/SidebarRenderer.js';
 import { updateMinimap } from '../ui/MinimapRenderer.js';
 import { EventBus, GameEvents } from '../events/EventBus.js';
 import { WorldState } from '../events/WorldState.js';
@@ -43,6 +43,7 @@ let dialogueSystem = new DialogueSystem();
 let eventBus = new EventBus();
 let worldState = new WorldState(eventBus);
 let questLogVisible = false;
+let inventorySelectedIndex = 0;
 
 // Getter-based context so TriggerSystem/QuestSystem/WorldReactor always see current refs
 const gameContext = {
@@ -70,7 +71,7 @@ function updateViewport() {
 function updateGameInfo() {
     updateHealth(player.health, player.maxHealth);
     updateCrystals(player.crystals, board.requiredCrystals || 0);
-    updateInventory(inventory);
+    updateInventory(inventory, inventorySelectedIndex);
 }
 
 /**
@@ -89,7 +90,7 @@ function gameLoop() {
         // Sidebar updates (DOM-based, replacing canvas HUD)
         updateHealth(player.health, player.maxHealth);
         updateCrystals(player.crystals, board.requiredCrystals || 0);
-        updateInventory(inventory);
+        updateInventory(inventory, inventorySelectedIndex);
         if (worldGraph && playerState) {
             updateMinimap(worldGraph, playerState);
         }
@@ -338,6 +339,55 @@ function handleInteraction() {
 }
 
 /**
+ * Use the currently selected inventory item.
+ * Emits ITEM_USE event and applies the item effect.
+ */
+function handleItemUse() {
+    const items = inventory.getAll();
+    const item = items[inventorySelectedIndex];
+    if (!item) return;
+
+    const itemId = item.itemId;
+    eventBus.emit(GameEvents.ITEM_USE, { itemId, slotIndex: inventorySelectedIndex });
+
+    switch (itemId) {
+        case 'health_potion':
+            if (player.health >= player.maxHealth) {
+                showMessage('Already at full health.');
+                return;
+            }
+            inventory.remove(itemId);
+            player.health = Math.min(player.health + 1, player.maxHealth);
+            showMessage('Used health potion. Health restored!');
+            break;
+        case 'gold_key': {
+            const facing = player.getFacingTile();
+            const entity = entityRegistry.getAt(facing.x, facing.y);
+            if (entity && entity.type === 'interactive' && entity.subtype === 'locked_door') {
+                inventory.remove(itemId);
+                entity.markForRemoval();
+                entityRegistry.cleanup();
+                showMessage('Used gold key. The door is unlocked!');
+            } else {
+                showMessage("Can't use that here.");
+            }
+            break;
+        }
+        default:
+            showMessage("Can't use that here.");
+            break;
+    }
+}
+
+/**
+ * Cycle the inventory selection by a delta (+1 or -1), wrapping around 0-8.
+ * @param {number} delta
+ */
+function cycleInventorySelection(delta) {
+    inventorySelectedIndex = ((inventorySelectedIndex + delta) % 9 + 9) % 9;
+}
+
+/**
  * Check if any enemy is on the player's tile after entity updates.
  * If so, player takes damage.
  */
@@ -423,6 +473,19 @@ document.addEventListener('keydown', (event) => {
         return;
     }
 
+    // E = use selected inventory item
+    if (event.key === 'e' || event.key === 'E') {
+        handleItemUse();
+        return;
+    }
+
+    // Number keys 1-9 = select inventory slot
+    const keyNum = parseInt(event.key, 10);
+    if (keyNum >= 1 && keyNum <= 9) {
+        inventorySelectedIndex = keyNum - 1;
+        return;
+    }
+
     const moveMap = {
         'ArrowUp': [0, -1],
         'ArrowDown': [0, 1],
@@ -463,5 +526,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('killButton').addEventListener('click', killYourself);
     document.getElementById('dismissButton').addEventListener('click', hideMessage);
+    setSlotClickHandler((index) => { inventorySelectedIndex = index; });
     startGame();
 });
