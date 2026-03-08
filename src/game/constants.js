@@ -35,3 +35,21 @@ export const entityColors = {
     item: '#d9d94a',
     interactive: '#8B4513'
 };
+
+/** @type {Object<string, string>} */
+export const itemGlyphs = {
+    health_potion: '🧪',
+    gold_key: '🗝️',
+    sword: '⚔️',
+    shield: '🛡️',
+    bow: '🏹',
+    coin: '🪙',
+    gem: '💎',
+    scroll: '📜',
+    ring: '💍',
+    lantern: '🔦',
+    rare_crystal: '💎',
+    elder_amulet: '🧿'
+};
+
+export const FALLBACK_GLYPH = '📦';
