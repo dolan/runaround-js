@@ -7,23 +7,70 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
-        <div id="game-info">
-            <span id="board-name"></span>
-            <span id="health-display">Health: 3/3</span>
-            <span>Crystals: <span id="crystal-count">0</span></span>
+    <div id="game-frame">
+        <!-- Left: game viewport -->
+        <div id="game-viewport">
+            <canvas id="gameCanvas"></canvas>
+        </div>
+
+        <!-- Right: sidebar -->
+        <div id="game-sidebar">
+            <div id="sidebar-minimap" class="sidebar-section">
+                <div class="sidebar-title">WORLD MAP</div>
+                <canvas id="minimapCanvas" width="120" height="120"></canvas>
+            </div>
+            <div id="sidebar-status" class="sidebar-section">
+                <div class="sidebar-title">STATUS</div>
+                <div id="sidebar-health"></div>
+                <div id="crystal-display"></div>
+                <div id="board-name-display"></div>
+            </div>
+            <div id="sidebar-inventory" class="sidebar-section">
+                <div class="sidebar-title">INVENTORY</div>
+                <div id="inventory-grid"></div>
+                <div id="inventory-selected"></div>
+            </div>
+            <div id="sidebar-quests" class="sidebar-section collapsible">
+                <div class="sidebar-title" id="quest-toggle">
+                    QUESTS <span class="collapse-indicator">▾</span>
+                </div>
+                <div id="quest-tracker"></div>
+            </div>
+            <div id="sidebar-spacer"></div>
+            <div id="sidebar-footer">
+                <div id="gamepad-status"></div>
+                <div id="sidebar-buttons">
+                    <button id="helpButton">? Help</button>
+                    <button id="devToolsToggle" aria-label="Toggle developer tools">⚙</button>
+                </div>
+            </div>
         </div>
     </div>
-    <div id="controls">
-        <button id="saveButton">Save Level</button>
+
+    <!-- Hidden: old game-info div kept for JS compatibility (Phase 2 removes this) -->
+    <div id="game-info" style="display: none;">
+        <span id="board-name"></span>
+        <span id="health-display">Health: 3/3</span>
+        <span>Crystals: <span id="crystal-count">0</span></span>
+    </div>
+
+    <!-- Dev tools (below main frame, Phase 4 adds toggle to hide) -->
+    <div id="dev-tools">
+        <span class="dev-label">DEV</span>
+        <button id="saveButton">Save</button>
         <input type="file" id="loadFile" accept=".json">
         <button id="killButton">Restart</button>
     </div>
+
+    <!-- Message/dialogue panel -->
     <div id="messagePanel">
         <div id="messageText"></div>
         <button id="dismissButton">OK</button>
     </div>
+
+    <!-- Help overlay (new, populated by JS in Phase 4) -->
+    <div id="helpOverlay"></div>
+
     <script type="module" src="/src/game/main.js"></script>
 </body>
 </html>

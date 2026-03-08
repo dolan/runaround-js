@@ -3,63 +3,246 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #222;
-    color: #fff;
+    background-color: #0d0d1a;
+    color: #ddd;
     margin: 0;
-    padding: 20px;
+    padding: 24px;
 }
 
-#game-container {
+/* Main frame: flex row, game + sidebar */
+#game-frame {
+    display: flex;
+    border: 1px solid #222;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+#game-viewport {
     position: relative;
+    width: 640px;
+    height: 480px;
 }
 
 #gameCanvas {
-    border: 1px solid #444;
+    display: block;
+    width: 640px;
+    height: 480px;
 }
 
-#game-info {
-    margin-top: 10px;
-    text-align: center;
-}
-
-#countdown {
-    font-size: 10px;
-    margin-top: 4px;
-}
-
-#controls {
-    margin-top: 20px;
-}
-
-#saveButton, #dismissButton {
-    background-color: #444;
-    border: none;
-    color: #fff;
-    padding: 10px 20px;
-    margin: 0 10px;
-    cursor: pointer;
+#game-sidebar {
+    width: 200px;
+    background: #111122;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid rgba(255,255,255,0.06);
     font-family: 'Courier New', monospace;
 }
 
-#loadFile {
-    display: inline-block;
-    margin-left: 10px;
+.sidebar-section {
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 10px 12px;
 }
 
+.sidebar-title {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #666;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+#sidebar-spacer {
+    flex: 1;
+}
+
+#sidebar-footer {
+    padding: 10px 12px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+#gamepad-status {
+    font-size: 11px;
+    color: #06d6a0;
+    margin-bottom: 6px;
+    display: none;
+}
+
+#sidebar-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+#sidebar-buttons button {
+    flex: 1;
+    background: #1a1a2e;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #888;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    padding: 5px 8px;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+#sidebar-buttons button:hover {
+    background: #252540;
+    color: #ccc;
+}
+
+#minimapCanvas {
+    display: block;
+    background: #0a0a16;
+    border-radius: 3px;
+}
+
+#sidebar-health {
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+#crystal-display {
+    font-size: 12px;
+    color: #06d6a0;
+    margin-bottom: 4px;
+}
+
+#board-name-display {
+    font-size: 10px;
+    color: #888;
+}
+
+#inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+#inventory-selected {
+    font-size: 10px;
+    color: #aaa;
+}
+
+.sidebar-title:hover {
+    cursor: default;
+}
+
+.collapsible .sidebar-title {
+    cursor: pointer;
+}
+
+.collapsible .sidebar-title:hover {
+    color: #999;
+}
+
+.collapse-indicator {
+    float: right;
+    font-size: 10px;
+}
+
+/* Quest tracker */
+#quest-tracker {
+    font-size: 11px;
+    color: #bbb;
+}
+
+/* Dev tools panel */
+#dev-tools {
+    margin-top: 16px;
+    padding: 10px 16px;
+    border: 1px solid rgba(255,100,0,0.2);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dev-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: rgba(255,100,0,0.5);
+    font-weight: bold;
+}
+
+#dev-tools button {
+    background-color: #1a1a2e;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #aaa;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    border-radius: 3px;
+}
+
+#dev-tools button:hover {
+    background-color: #252540;
+    color: #ddd;
+}
+
+#dev-tools input[type="file"] {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #aaa;
+}
+
+/* Message panel overlay */
 #messagePanel {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: #000;
-    border: 1px solid #444;
-    padding: 20px;
+    background-color: #0a0a16;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 24px;
     display: none;
     flex-direction: column;
     align-items: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+    z-index: 100;
 }
 
 #messageText {
     margin-bottom: 20px;
     text-align: center;
+    color: #ddd;
+    font-family: 'Courier New', monospace;
+}
+
+#dismissButton {
+    background-color: #1a1a2e;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #ddd;
+    padding: 8px 24px;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    border-radius: 3px;
+}
+
+#dismissButton:hover {
+    background-color: #252540;
+}
+
+/* Help overlay */
+#helpOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 200;
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Countdown (used in timed messages) */
+#countdown {
+    font-size: 10px;
+    margin-top: 4px;
 }
