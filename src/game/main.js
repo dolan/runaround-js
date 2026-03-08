@@ -6,12 +6,12 @@ import { showMessage, hideMessage } from '../ui/messages.js';
 import { loadBoardFromFile, saveBoardToFile } from '../ui/fileIO.js';
 import { WorldGraph } from '../world/WorldGraph.js';
 import { PlayerState } from '../world/PlayerState.js';
-import { drawMinimap } from '../world/WorldRenderer.js';
 import { EntityRegistry } from '../entities/EntityRegistry.js';
 import { createEntity } from '../entities/EntityFactory.js';
 import { Inventory } from '../entities/Inventory.js';
 import { DialogueSystem } from '../entities/DialogueSystem.js';
-import { drawHud } from '../ui/HudRenderer.js';
+import { updateHealth, updateCrystals, updateBoardName as updateSidebarBoardName, updateInventory, updateQuests, resetCache } from '../ui/SidebarRenderer.js';
+import { updateMinimap } from '../ui/MinimapRenderer.js';
 import { EventBus, GameEvents } from '../events/EventBus.js';
 import { WorldState } from '../events/WorldState.js';
 import { TriggerSystem } from '../events/TriggerSystem.js';
@@ -68,32 +68,35 @@ function updateViewport() {
 }
 
 function updateGameInfo() {
-    document.getElementById('crystal-count').textContent = player.crystals;
-    const healthEl = document.getElementById('health-display');
-    if (healthEl) {
-        healthEl.textContent = `Health: ${player.health}/${player.maxHealth}`;
-    }
+    updateHealth(player.health, player.maxHealth);
+    updateCrystals(player.crystals, board.requiredCrystals || 0);
+    updateInventory(inventory);
 }
 
 /**
- * Update the board name display in the game info area.
+ * Update the board name display in the sidebar.
  * @param {string} name
  */
 function updateBoardName(name) {
-    const el = document.getElementById('board-name');
-    if (el) {
-        el.textContent = name || '';
-    }
+    updateSidebarBoardName(name);
 }
 
 function gameLoop() {
     if (board && player) {
         updateViewport();
         drawGame(ctx, board, player, viewportX, viewportY, entityRegistry);
-        drawHud(ctx, player, inventory);
+
+        // Sidebar updates (DOM-based, replacing canvas HUD)
+        updateHealth(player.health, player.maxHealth);
+        updateCrystals(player.crystals, board.requiredCrystals || 0);
+        updateInventory(inventory);
         if (worldGraph && playerState) {
-            drawMinimap(ctx, worldGraph, playerState);
+            updateMinimap(worldGraph, playerState);
         }
+        if (questSystem) {
+            updateQuests(questSystem);
+        }
+
         if (questLogVisible && questSystem) {
             drawQuestLog(ctx, questSystem);
         }
@@ -208,6 +211,7 @@ async function enterBoard(boardId, destX, destY) {
             triggerSystem.registerTriggers(boardData.triggers, 'board');
         }
 
+        resetCache();
         const info = worldGraph.getBoardInfo(boardId);
         updateBoardName(info ? info.name : boardId);
         updateGameInfo();
