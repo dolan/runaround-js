@@ -11,8 +11,8 @@ let _prevMaxHealth = -1;
 let _prevCrystals = -1;
 let _prevRequired = -1;
 let _prevBoardName = null;
-let _prevInventoryKey = '';
-let _prevQuestKey = '';
+let _prevInventoryKey = null;
+let _prevQuestKey = null;
 
 /**
  * Update the health display in the sidebar.
@@ -185,6 +185,6 @@ export function resetCache() {
     _prevCrystals = -1;
     _prevRequired = -1;
     _prevBoardName = null;
-    _prevInventoryKey = '';
-    _prevQuestKey = '';
+    _prevInventoryKey = null;
+    _prevQuestKey = null;
 }
