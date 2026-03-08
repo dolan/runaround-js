@@ -142,10 +142,58 @@ body {
     font-size: 10px;
 }
 
+/* Inventory slots */
+.inventory-slot {
+    background: #1a1a2e;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #ccc;
+    font-size: 14px;
+    padding: 4px;
+    text-align: center;
+    cursor: default;
+    border-radius: 3px;
+    min-height: 28px;
+    position: relative;
+}
+
+.inventory-slot.empty {
+    color: #444;
+    font-size: 10px;
+}
+
+.inventory-slot.selected {
+    border: 2px solid #e63946;
+}
+
+.inventory-slot-key {
+    font-size: 7px;
+    color: #444;
+    display: block;
+    position: absolute;
+    top: 1px;
+    right: 3px;
+}
+
 /* Quest tracker */
 #quest-tracker {
     font-size: 11px;
     color: #bbb;
+}
+
+.quest-item {
+    margin-bottom: 6px;
+}
+
+.quest-name {
+    color: #FFD700;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.quest-objective {
+    color: #999;
+    font-size: 10px;
+    padding-left: 8px;
 }
 
 /* Dev tools panel */
