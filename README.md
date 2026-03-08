@@ -67,9 +67,9 @@ The game supports a connected world of boards via a `world.json` file in `public
 * `x` (exit) tiles and `d` (door) tiles can be linked to other boards via transitions defined in `world.json`
 * Exit tiles still require all crystals to be collected before transitioning
 * Door tiles allow free passage — walk onto them to transition immediately
-* The minimap in the top-right corner shows your position in the world (red = current board, green = visited, gray = unvisited)
+* The sidebar minimap shows your position in the world (red = current board, green = visited, gray = unvisited)
 * Board state resets each time you enter a board (crystals respawn, blocks reset)
-* The current board name is displayed in the game info area
+* The current board name is displayed in the sidebar
 
 ### world.json format
 
@@ -112,6 +112,20 @@ The game supports a connected world of boards via a `world.json` file in `public
 2. Create a `world.json` mapping boards and transitions
 3. Place all files in `public/levels/`
 4. The game automatically detects `world.json` and switches to world mode
+
+## UI Layout
+
+The game uses a horizontal layout with the game canvas (640x480) on the left and a 200px sidebar on the right. The sidebar displays:
+
+* **World Map** — minimap showing connected boards and your current position
+* **Status** — health hearts, crystal counter (hidden on boards with no crystal requirement), and current board name
+* **Inventory** — 3x3 grid of item slots with glyphs and counts
+* **Quests** — active quest tracker with current objectives (collapsible)
+* **Footer** — help and dev tools toggle buttons
+
+The crystal counter only appears on boards that require crystals to exit. In world mode, most boards use door/warp transitions instead, so the counter stays hidden.
+
+Dev tools (Save, Load, Restart) are shown below the main game frame.
 
 ## The timeline of Runaround
 * 1994 - Originally implemented in Lightspeed C on a Mac Classic
