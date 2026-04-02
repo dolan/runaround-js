@@ -1,4 +1,4 @@
-import { TILE_SIZE, gameColors, glyphs, entityColors } from './constants.js';
+import { TILE_SIZE, gameColors, glyphs, entityColors, tileSpriteMap, exitSpriteMap } from './constants.js';
 
 function getTileColor(tile) {
     const colorMap = {
@@ -32,10 +32,44 @@ function getTileGlyph(tile, player, board) {
     return glyphMap[tile] || '';
 }
 
-function drawTile(ctx, x, y, tile, viewportX, viewportY, player, board) {
+/**
+ * Draw a sprite frame to the canvas at the given position.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {{ image: HTMLImageElement, sx: number, sy: number, sw: number, sh: number }} frame
+ * @param {number} screenX
+ * @param {number} screenY
+ */
+function drawSpriteFrame(ctx, frame, screenX, screenY) {
+    ctx.drawImage(
+        frame.image,
+        frame.sx, frame.sy, frame.sw, frame.sh,
+        screenX, screenY, TILE_SIZE, TILE_SIZE
+    );
+}
+
+function drawTile(ctx, x, y, tile, viewportX, viewportY, player, board, spriteAtlas) {
     const screenX = x * TILE_SIZE - viewportX;
     const screenY = y * TILE_SIZE - viewportY;
 
+    // Try sprite first
+    if (spriteAtlas) {
+        let spriteId = tileSpriteMap[tile];
+        // Exit tile uses state-dependent sprite (locked vs open)
+        if (tile === 'x') {
+            spriteId = player.crystals >= board.requiredCrystals
+                ? exitSpriteMap.open
+                : exitSpriteMap.locked;
+        }
+        if (spriteId) {
+            const frame = spriteAtlas.getFrame(spriteId, 'default', 0);
+            if (frame) {
+                drawSpriteFrame(ctx, frame, screenX, screenY);
+                return;
+            }
+        }
+    }
+
+    // Fallback: colored rectangle + glyph
     ctx.fillStyle = getTileColor(tile);
     ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE);
 
@@ -49,25 +83,38 @@ function drawTile(ctx, x, y, tile, viewportX, viewportY, player, board) {
     }
 }
 
-function drawPlayer(ctx, player, viewportX, viewportY) {
-    const screenX = player.x * TILE_SIZE - viewportX + TILE_SIZE / 2;
-    const screenY = player.y * TILE_SIZE - viewportY + TILE_SIZE / 2;
+function drawPlayer(ctx, player, viewportX, viewportY, spriteAtlas) {
+    const screenX = player.x * TILE_SIZE - viewportX;
+    const screenY = player.y * TILE_SIZE - viewportY;
+
+    // Try sprite (via player's animState if available)
+    if (spriteAtlas && player.animState) {
+        const frame = player.animState.getCurrentFrame(spriteAtlas);
+        if (frame) {
+            drawSpriteFrame(ctx, frame, screenX, screenY);
+            return;
+        }
+    }
+
+    // Fallback: stick figure
+    const centerX = screenX + TILE_SIZE / 2;
+    const centerY = screenY + TILE_SIZE / 2;
 
     ctx.fillStyle = 'black';
     ctx.beginPath();
-    ctx.arc(screenX, screenY, TILE_SIZE / 5, 0, 2 * Math.PI);
+    ctx.arc(centerX, centerY, TILE_SIZE / 5, 0, 2 * Math.PI);
     ctx.fill();
 
     ctx.strokeStyle = 'black';
     ctx.beginPath();
-    ctx.moveTo(screenX, screenY + TILE_SIZE / 6);
-    ctx.lineTo(screenX, screenY + TILE_SIZE / 2.5);
-    ctx.moveTo(screenX - TILE_SIZE / 6, screenY + TILE_SIZE / 3);
-    ctx.lineTo(screenX + TILE_SIZE / 6, screenY + TILE_SIZE / 3);
-    ctx.moveTo(screenX, screenY + TILE_SIZE / 2.5);
-    ctx.lineTo(screenX - TILE_SIZE / 6, screenY + TILE_SIZE / 1.8);
-    ctx.moveTo(screenX, screenY + TILE_SIZE / 2.5);
-    ctx.lineTo(screenX + TILE_SIZE / 6, screenY + TILE_SIZE / 1.8);
+    ctx.moveTo(centerX, centerY + TILE_SIZE / 6);
+    ctx.lineTo(centerX, centerY + TILE_SIZE / 2.5);
+    ctx.moveTo(centerX - TILE_SIZE / 6, centerY + TILE_SIZE / 3);
+    ctx.lineTo(centerX + TILE_SIZE / 6, centerY + TILE_SIZE / 3);
+    ctx.moveTo(centerX, centerY + TILE_SIZE / 2.5);
+    ctx.lineTo(centerX - TILE_SIZE / 6, centerY + TILE_SIZE / 1.8);
+    ctx.moveTo(centerX, centerY + TILE_SIZE / 2.5);
+    ctx.lineTo(centerX + TILE_SIZE / 6, centerY + TILE_SIZE / 1.8);
     ctx.stroke();
 }
 
@@ -77,8 +124,9 @@ function drawPlayer(ctx, player, viewportX, viewportY) {
  * @param {import('../entities/EntityRegistry.js').EntityRegistry} entityRegistry
  * @param {number} viewportX
  * @param {number} viewportY
+ * @param {import('./SpriteAtlas.js').SpriteAtlas} [spriteAtlas]
  */
-function drawEntities(ctx, entityRegistry, viewportX, viewportY) {
+function drawEntities(ctx, entityRegistry, viewportX, viewportY, spriteAtlas) {
     const startX = Math.floor(viewportX / TILE_SIZE);
     const startY = Math.floor(viewportY / TILE_SIZE);
     const endX = startX + Math.ceil(ctx.canvas.width / TILE_SIZE) + 1;
@@ -92,12 +140,29 @@ function drawEntities(ctx, entityRegistry, viewportX, viewportY) {
         const screenX = entity.x * TILE_SIZE - viewportX;
         const screenY = entity.y * TILE_SIZE - viewportY;
 
-        // Draw colored background
+        // Try sprite (via entity's animState if available)
+        if (spriteAtlas && entity.animState) {
+            const frame = entity.animState.getCurrentFrame(spriteAtlas);
+            if (frame) {
+                drawSpriteFrame(ctx, frame, screenX, screenY);
+                continue;
+            }
+        }
+
+        // Try static sprite lookup by spriteId
+        if (spriteAtlas && entity.spriteId) {
+            const frame = spriteAtlas.getFrame(entity.spriteId, 'default', 0);
+            if (frame) {
+                drawSpriteFrame(ctx, frame, screenX, screenY);
+                continue;
+            }
+        }
+
+        // Fallback: colored rectangle + glyph
         const bgColor = entity.color || entityColors[entity.type] || '#888';
         ctx.fillStyle = bgColor;
         ctx.fillRect(screenX + 2, screenY + 2, TILE_SIZE - 4, TILE_SIZE - 4);
 
-        // Draw glyph
         if (entity.glyph) {
             ctx.fillStyle = 'black';
             ctx.font = '20px Arial';
@@ -116,6 +181,9 @@ function drawEntities(ctx, entityRegistry, viewportX, viewportY) {
  * @param {number} viewportY
  */
 function drawFacingIndicator(ctx, player, viewportX, viewportY) {
+    // Skip facing indicator when using sprites — the sprite direction conveys facing
+    if (player.animState) return;
+
     const centerX = player.x * TILE_SIZE - viewportX + TILE_SIZE / 2;
     const centerY = player.y * TILE_SIZE - viewportY + TILE_SIZE / 2;
     const dotX = centerX + player.facing.dx * (TILE_SIZE / 2.5);
@@ -135,8 +203,9 @@ function drawFacingIndicator(ctx, player, viewportX, viewportY) {
  * @param {number} viewportX
  * @param {number} viewportY
  * @param {import('../entities/EntityRegistry.js').EntityRegistry} [entityRegistry]
+ * @param {import('./SpriteAtlas.js').SpriteAtlas} [spriteAtlas]
  */
-export function drawGame(ctx, board, player, viewportX, viewportY, entityRegistry) {
+export function drawGame(ctx, board, player, viewportX, viewportY, entityRegistry, spriteAtlas) {
     const VIEWPORT_TILES_X = ctx.canvas.width / TILE_SIZE;
     const VIEWPORT_TILES_Y = ctx.canvas.height / TILE_SIZE;
 
@@ -151,16 +220,16 @@ export function drawGame(ctx, board, player, viewportX, viewportY, entityRegistr
         for (let x = startX; x < endX; x++) {
             if (x >= 0 && x < board.width && y >= 0 && y < board.height) {
                 const tile = board.getTile(x, y);
-                drawTile(ctx, x, y, tile, viewportX, viewportY, player, board);
+                drawTile(ctx, x, y, tile, viewportX, viewportY, player, board, spriteAtlas);
             }
         }
     }
 
     // Entities render between tiles and player
     if (entityRegistry) {
-        drawEntities(ctx, entityRegistry, viewportX, viewportY);
+        drawEntities(ctx, entityRegistry, viewportX, viewportY, spriteAtlas);
     }
 
-    drawPlayer(ctx, player, viewportX, viewportY);
+    drawPlayer(ctx, player, viewportX, viewportY, spriteAtlas);
     drawFacingIndicator(ctx, player, viewportX, viewportY);
 }

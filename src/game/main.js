@@ -18,6 +18,7 @@ import { TriggerSystem } from '../events/TriggerSystem.js';
 import { QuestSystem } from '../events/QuestSystem.js';
 import { WorldReactor } from '../events/WorldReactor.js';
 import { drawQuestLog } from '../ui/QuestLogRenderer.js';
+import { SpriteAtlas } from './SpriteAtlas.js';
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -28,6 +29,8 @@ let viewportX = 0;
 let viewportY = 0;
 let currentLevelIndex = 1;
 let gameLoopRunning = false;
+let lastFrameTime = 0;
+let spriteAtlas = new SpriteAtlas();
 
 // World mode state
 let worldGraph = null;
@@ -82,10 +85,19 @@ function updateBoardName(name) {
     updateSidebarBoardName(name);
 }
 
-function gameLoop() {
+function gameLoop(timestamp) {
+    const deltaTime = timestamp - lastFrameTime;
+    lastFrameTime = timestamp;
+
     if (board && player) {
+        // Update animations
+        if (player.animState) {
+            player.animState.update(deltaTime, spriteAtlas);
+        }
+        entityRegistry.updateAnimations(deltaTime, spriteAtlas);
+
         updateViewport();
-        drawGame(ctx, board, player, viewportX, viewportY, entityRegistry);
+        drawGame(ctx, board, player, viewportX, viewportY, entityRegistry, spriteAtlas);
 
         // Sidebar updates (DOM-based, replacing canvas HUD)
         updateHealth(player.health, player.maxHealth);
@@ -257,6 +269,10 @@ async function startGame() {
     triggerSystem = new TriggerSystem(eventBus, worldState, gameContext);
     questSystem = new QuestSystem(eventBus, worldState, gameContext);
     worldReactor = new WorldReactor(eventBus, worldState, gameContext);
+
+    // Load sprite atlas (gracefully handles missing manifest)
+    spriteAtlas = new SpriteAtlas();
+    await spriteAtlas.load('sprites/sprites.json');
 
     try {
         const response = await fetch('levels/world.json');

@@ -53,3 +53,26 @@ export const itemGlyphs = {
 };
 
 export const FALLBACK_GLYPH = '📦';
+
+/** Map tile codes to sprite IDs in the sprite atlas */
+export const tileSpriteMap = {
+    'w': 'tile_wall',
+    '.': 'tile_floor',
+    'c': 'tile_crystal',
+    'm': 'tile_movable',
+    'h': 'tile_hole',
+    'ol': 'tile_arrow_left',
+    'or': 'tile_arrow_right',
+    'ou': 'tile_arrow_up',
+    'od': 'tile_arrow_down',
+    'd': 'tile_door'
+};
+
+/**
+ * Exit tile ('x') uses different sprites depending on game state.
+ * Resolved at render time, not in the static map above.
+ */
+export const exitSpriteMap = {
+    locked: 'tile_exit_locked',
+    open: 'tile_exit_open'
+};

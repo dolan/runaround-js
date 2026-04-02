@@ -1,0 +1,17 @@
+{
+  "tile_floor":       { "default": { "file": "tiles/tile_00.png", "frames": 1, "frameDuration": 0 } },
+  "tile_wall":        { "default": { "file": "tiles/tile_04.png", "frames": 1, "frameDuration": 0 } },
+  "tile_crystal":     { "default": { "file": "tiles/tile_08.png", "frames": 1, "frameDuration": 0 } },
+  "tile_hole":        { "default": { "file": "tiles/tile_22.png", "frames": 1, "frameDuration": 0 } },
+  "tile_movable":     { "default": { "file": "tiles/tile_24.png", "frames": 1, "frameDuration": 0 } },
+  "tile_door":        { "default": { "file": "tiles/tile_34.png", "frames": 1, "frameDuration": 0 } },
+  "tile_door_open":   { "default": { "file": "tiles/tile_42.png", "frames": 1, "frameDuration": 0 } },
+  "tile_exit_locked": { "default": { "file": "tiles/tile_51.png", "frames": 1, "frameDuration": 0 } },
+  "tile_exit_open":   { "default": { "file": "tiles/tile_52.png", "frames": 1, "frameDuration": 0 } },
+  "tile_arrow_left":  { "default": { "file": "tiles/tile_32.png", "frames": 1, "frameDuration": 0 } },
+  "tile_arrow_right": { "default": { "file": "tiles/tile_36.png", "frames": 1, "frameDuration": 0 } },
+  "tile_arrow_up":    { "default": { "file": "tiles/tile_40.png", "frames": 1, "frameDuration": 0 } },
+  "tile_arrow_down":  { "default": { "file": "tiles/tile_44.png", "frames": 1, "frameDuration": 0 } },
+  "tile_portal":      { "default": { "file": "tiles/tile_58.png", "frames": 1, "frameDuration": 0 } },
+  "tile_chest_closed":{ "default": { "file": "tiles/tile_28.png", "frames": 1, "frameDuration": 0 } }
+}

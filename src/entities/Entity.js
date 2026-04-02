@@ -13,8 +13,9 @@ export class Entity {
      * @param {string} [config.color] - Background color
      * @param {boolean} [config.blocking=true] - Whether this entity blocks player movement
      * @param {Object} [config.properties] - Type-specific properties
+     * @param {string} [config.spriteId] - Sprite atlas ID for this entity
      */
-    constructor({ id, type, x, y, glyph = '', color = '', blocking = true, properties = {} }) {
+    constructor({ id, type, x, y, glyph = '', color = '', blocking = true, properties = {}, spriteId = null }) {
         this.id = id;
         this.type = type;
         this.x = x;
@@ -24,6 +25,10 @@ export class Entity {
         this.blocking = blocking;
         this.properties = properties;
         this.active = true;
+        /** @type {string|null} Sprite atlas ID for rendering */
+        this.spriteId = spriteId;
+        /** @type {import('../game/AnimationState.js').AnimationState|null} */
+        this.animState = null;
     }
 
     /**

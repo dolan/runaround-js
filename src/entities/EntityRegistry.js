@@ -108,6 +108,19 @@ export class EntityRegistry {
     }
 
     /**
+     * Update animation states for all entities that have one.
+     * @param {number} deltaTime - ms since last frame
+     * @param {import('../game/SpriteAtlas.js').SpriteAtlas} atlas
+     */
+    updateAnimations(deltaTime, atlas) {
+        for (const entity of this.entities.values()) {
+            if (entity.active && entity.animState) {
+                entity.animState.update(deltaTime, atlas);
+            }
+        }
+    }
+
+    /**
      * Remove inactive entities from both maps.
      */
     cleanup() {

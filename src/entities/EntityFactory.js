@@ -3,6 +3,7 @@ import { Enemy } from './Enemy.js';
 import { Item } from './Item.js';
 import { InteractiveObject } from './InteractiveObject.js';
 import { Entity } from './Entity.js';
+import { AnimationState } from '../game/AnimationState.js';
 
 /** Default glyphs per entity type */
 const defaultGlyphs = {
@@ -44,21 +45,34 @@ export function createEntity(def) {
         ...def,
         glyph: def.glyph || getDefaultGlyph(def),
         color: def.color || defaultColors[def.type] || '',
-        properties: def.properties || {}
+        properties: def.properties || {},
+        spriteId: def.spriteId || null
     };
 
+    let entity;
     switch (def.type) {
         case 'npc':
-            return new NPC(config);
+            entity = new NPC(config);
+            break;
         case 'enemy':
-            return new Enemy(config);
+            entity = new Enemy(config);
+            break;
         case 'item':
-            return new Item(config);
+            entity = new Item(config);
+            break;
         case 'interactive':
-            return new InteractiveObject(config);
+            entity = new InteractiveObject(config);
+            break;
         default:
-            return new Entity(config);
+            entity = new Entity(config);
     }
+
+    // Create animation state if spriteId is defined
+    if (entity.spriteId) {
+        entity.animState = new AnimationState(entity.spriteId, def.defaultAnimation || 'idle');
+    }
+
+    return entity;
 }
 
 /**
